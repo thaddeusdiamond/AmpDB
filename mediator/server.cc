@@ -7,7 +7,6 @@
 #include <cerrno>
 
 #include <algorithm>
-#include <deque>
 #include <limits>
 #include <map>
 #include <set>
@@ -27,6 +26,9 @@
 #include "../generictxn.h"
 #include "../remote.h"
 #include "../message.h"
+#include "../circularbuffer.h"
+
+#define DEQUE CircularBuffer
 
 // #define VERBOSE 1
 #define GENERATE_TXN 5000  // pool size
@@ -40,7 +42,6 @@ const int RSETSIZE_IDX = 5;
 const int WSETSIZE_IDX = 6;
 const int RSET_OFFSET = 8;
 
-using std::deque;
 using std::make_pair;
 using std::map;
 using std::set;
@@ -86,12 +87,12 @@ int MediatorServer::StartServer(){
     signal(SIGTERM, &stop_server);
     signal(SIGPIPE, &stop_server);
 
-    deque<GenericTxn> queued_txns;
-    deque<int> queued_origin;
+    DEQUE<GenericTxn> queued_txns;
+    DEQUE<int> queued_origin;
     _result_count = 0;
     while(server_running){
-        deque<GenericTxn> txns;
-        deque<int> origin;
+        DEQUE<GenericTxn> txns;
+        DEQUE<int> origin;
 
 #if ! GENERATE_TXN
         _remote.FillIncomingTxns(&txns, 0, &origin);
@@ -128,8 +129,8 @@ int MediatorServer::StartServer(){
         queued_txns.clear();
         queued_origin.clear();
 
-        deque<int>::const_iterator jt = origin.begin();
-        for(deque<GenericTxn>::iterator it = txns.begin();
+        DEQUE<int>::const_iterator jt = origin.begin();
+        for(DEQUE<GenericTxn>::iterator it = txns.begin();
             it != txns.end(); ++it, ++jt){
             it->txnid_unordered = it->txnid = _next_txnid++;
             it->source_mediator = _config.myNodeID;
@@ -151,10 +152,10 @@ int MediatorServer::StartServer(){
 #endif
         }
 
-        deque<Message> msgs;
+        DEQUE<Message> msgs;
         _remote.FillIncomingMessages(&msgs);
 
-        for(deque<Message>::iterator it = msgs.begin();
+        for(DEQUE<Message>::iterator it = msgs.begin();
             it != msgs.end(); ++it)
             ProcessMsg(*it);
     }

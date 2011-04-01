@@ -1,19 +1,24 @@
-PROG=main
+# Thaddeus Diamond					    03/30/2011
+# Makefile for "TPC-C"					DDBMS
 
-CXXFLAGS=-g -O2 -Wno-deprecated -Wall
-LDFLAGS=
+# Standard compiler options
+CFLAGS =  -g3 -std=c99 -pedantic -Wall
 
-SRCS=main.cc ../remote.cc ../config.cc
-OBJS=$(SRCS:.cc=.o)
+all:    TPC-C
 
-all: $(PROG)
+# Create TPC-C from tpc_c.o and new_order.o
+TPC-C:  tpc_c.o new_order.o payment.o
+	${CXX} ${CFLAGS} -lm $^ -o $@
 
-%.o: %.cc
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
+# Rule to create tpc_c.o (link library header file)
+tpc_c.o: tpc_c.cc tpc_c.h
 
-$(PROG): $(OBJS)
-	$(CXX) $(LDFLAGS) -o $(PROG) $(OBJS) -lpthread
+# Rule to create new_order.o (link library header file)
+new_order.o: new_order.cc tpc_c.h
 
+# Rule to create payment.o (link library header file)
+payment.o: payment.cc tpc_c.h
+
+# Clean up
 clean:
-	rm -f $(PROG) $(OBJS)
-
+	/bin/rm -f *.o TPC-C

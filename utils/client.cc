@@ -18,6 +18,7 @@
 #include "../config.h"
 #include "../message.h"
 #include "../tpccload.h"
+#include "../loadgen/loadgen.h"
 
 using namespace std;
 
@@ -28,9 +29,6 @@ using namespace std;
 #define MICRO_STD  10
 
 int prepare_sock(const char hostname[], int port, bool mute);
-void prepare_txn_TPCC_NEWORDER_TXN(GenericTxn* t);
-void prepare_txn_MICRO(Configuration *config, GenericTxn* t);
-void prepare_txn_DEBUG(Configuration *config, GenericTxn* t, int part);
 void send_txn(int sock, const GenericTxn& txn);
 void receive_result(int sock, Message* msg);
 void get_intr(int sig);
@@ -75,7 +73,7 @@ int main(int argc, char* argv[]){
     write(sock, &node_id, sizeof(node_id));  // header
 #endif
 
-    GenericTxn txn;
+    GenericTxn *txn;
     
     if(!strcmp(argv[2],"-d")) {
         if(!argv[3]) {
@@ -113,8 +111,9 @@ int main(int argc, char* argv[]){
             ++nDone;
 
             // prepare_txn_MICRO(&config, &txn);
-            generatetpcctxn(&txn, config.dbpartitions.size());
+            txn = generate();
             send_txn(sock, txn);
+            delete txn;
         }
         return 0;
     }
@@ -163,80 +162,6 @@ int prepare_sock(const char hostname[], int port, bool mute){
     return sock;
 }
 
-void prepare_txn_TPCC_NEWORDER_TXN(GenericTxn* t){
-    t->txnid = nexttxnid++;
-    t->txntype = 0;
-    t->isolationlevel = SERIALIZABLE;
-    t->argcount = 0;
-    t->rsetsize = 0;
-    t->wsetsize = 0;
-    for(int i = 0; i < 15; i++) {
-        t->args[i] = 0;
-        t->args[5+i] = 0;
-        t->args[10+i] = i;
-        t->args[15+i] = 5+i;
-    }
-    t->args[4] = 5;
-    t->args[20] = 0;
-}
-
-int gaussian_cell(){
-    int n = (int) round(gaussian(MICRO_STD) + MICRO_MEAN);
-    if(n < 0)
-        return 0;
-    if(n >= MICROSIZE)
-        return MICROSIZE;
-    return n;
-}
-
-void prepare_txn_DEBUG(Configuration *config, GenericTxn* t, int part){
-    t->txnid = nexttxnid++;
-    t->txnid_unordered = t->txnid;
-    t->source_mediator = 0;
-    t->txntype = DEBUGTXN;
-    t->isolationlevel = SERIALIZABLE;
-    t->wsetsize = 1;
-    t->wset[0] = part;
-    t->rsetsize = 0;
-    t->argcount = 0;
-}
-
-void prepare_txn_MICRO(Configuration *config, GenericTxn* t){
-    bool mp = false;//rand()%100 < 1;
-    t->txnid = nexttxnid++;
-    t->txnid_unordered = t->txnid;
-    t->source_mediator = 0;
-    t->txntype = MICROTXN;
-    t->isolationlevel = SERIALIZABLE;
-    t->wsetsize = 10;
-    t->rsetsize = 10;
-    t->argcount = 0;
-    if(mp) {
-        int nparts = config->dbpartitions.size();
-        int p1 = rand() % nparts;
-        int p2 = (p1+1)%nparts;
-        //cout << t->txnid << "(" << p1 << "," << p2 << "): ";
-        for(int i = 0; i < t->wsetsize; i++) {
-            hell:
-            int x = ((rand()%2)?p1:p2) + nparts*(rand()%(MICROSIZE/nparts));
-            for(int j = 0; j < i; j++)
-                if(x == t->wset[j]) goto hell;
-            t->rset[i] = t->wset[i] = x;
-            //cout << x << " ";
-        }
-        //cout << "\n" << flush;
-    } else {
-        int nparts = config->dbpartitions.size();
-        int p = rand() % nparts;
-        for(int i = 0; i < t->wsetsize; i++) {
-            dengo:
-            int x = p + nparts*(rand()%(MICROSIZE/nparts));
-            for(int j = 0; j < i; j++)
-                if(x == t->wset[j]) goto dengo;
-            t->rset[i] = t->wset[i] = x;
-        }
-    }
-}
 
 
 //void prepare_txn_MICRO(GenericTxn* t){

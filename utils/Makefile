@@ -20,7 +20,7 @@ all: $(PROG)
 %.o: %.cc
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-client: $(CLIENT_OBJS) ../tpccload.h
+client: $(CLIENT_OBJS) ../loadgen/loadgen.o
 	$(CXX) -o $@ $(CLIENT_OBJS) $(LDFLAGS) -lrt
 
 dummy-db: $(DB_OBJS)
