@@ -1,0 +1,142 @@
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/preprocessor/preproc: no process found
+/home/accts/sw475/research/deter-db/preprocessor/preproc: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+04: Not receiving enough bytes from 103 (0, -1)
+01: Not receiving enough bytes from 103 (0, -1)
+14: Not receiving enough bytes from 103 (0, -1)
+03: Not receiving enough bytes from 103 (0, -1)
+00: Not receiving enough bytes from 103 (0, -1)
+07: Not receiving enough bytes from 103 (0, -1)
+02: Not receiving enough bytes from 103 (0, -1)
+12: Not receiving enough bytes from 103 (0, -1)
+10: Not receiving enough bytes from 103 (0, -1)
+13: Not receiving enough bytes from 103 (0, -1)
+05: Not receiving enough bytes from 103 (0, -1)
+11: Not receiving enough bytes from 103 (0, -1)
+06: Not receiving enough bytes from 103 (0, -1)
+09: Not receiving enough bytes from 103 (0, -1)
+08: Not receiving enough bytes from 103 (0, -1)
+200: Not receiving enough bytes from 103 (0, -1)
+201: Not receiving enough bytes from 103 (0, -1)
+100: DEAD at header (fd = 5) 0/32
+100: Not receiving full msg from 1
+101: DEAD at header (fd = 5) 0/32
+101: Not receiving full msg from 1
+102: DEAD at header (fd = 5) 0/32
+102: Not receiving full msg from 1
+104: DEAD at header (fd = 5) 0/32
+104: Not receiving full msg from 1
+104: DEAD at header (fd = 6) 0/32
+104: Not receiving full msg from 2
+101: DEAD at header (fd = 6) 0/32
+101: Not receiving full msg from 2
+100: DEAD at header (fd = 6) 0/32
+100: Not receiving full msg from 2
+102: DEAD at header (fd = 6) 0/32
+102: Not receiving full msg from 2
+104: DEAD at header (fd = 12) 0/32
+104: Not receiving full msg from 8
+101: DEAD at header (fd = 12) 0/32
+101: Not receiving full msg from 8
+104: Finished 0 transactions in 7.914153576 seconds (gen 5000)
+100: DEAD at header (fd = 12) 0/32
+102: DEAD at header (fd = 12) 0/32
+102: Not receiving full msg from 8
+100: Not receiving full msg from 8
+201: Not receiving enough bytes from 104 (0, 0)
+200: Not receiving enough bytes from 104 (0, 0)
+100: DEAD at header (fd = 10) 0/32
+100: Not receiving full msg from 6
+102: DEAD at header (fd = 10) 0/32
+102: Not receiving full msg from 6
+101: DEAD at header (fd = 10) 0/32
+101: Not receiving full msg from 6
+100: DEAD at header (fd = 19) 0/32
+102: DEAD at header (fd = 19) 0/32
+102: Not receiving full msg from 200
+100: Not receiving full msg from 200
+101: DEAD at header (fd = 19) 0/32
+101: Not receiving full msg from 200
+100: DEAD at header (fd = 14) 0/32
+100: Not receiving full msg from 10
+102: DEAD at header (fd = 14) 0/32
+102: Not receiving full msg from 10
+101: DEAD at header (fd = 14) 0/32
+101: Not receiving full msg from 10
+101: DEAD at header (fd = 9) 0/32
+101: Not receiving full msg from 5
+100: DEAD at header (fd = 9) 0/32
+100: Not receiving full msg from 5
+102: DEAD at header (fd = 9) 0/32
+102: Not receiving full msg from 5
+101: DEAD at header (fd = 17) 0/32
+101: Not receiving full msg from 13
+102: DEAD at header (fd = 17) 0/32
+102: Not receiving full msg from 13
+100: DEAD at header (fd = 17) 0/32
+100: Not receiving full msg from 13
+100: DEAD at header (fd = 13) 0/32
+100: Not receiving full msg from 9
+101: DEAD at header (fd = 13) 0/32
+101: Not receiving full msg from 9
+102: DEAD at header (fd = 13) 0/32
+102: Not receiving full msg from 9
+100: DEAD at header (fd = 7) 0/32
+100: Not receiving full msg from 3
+102: DEAD at header (fd = 7) 0/32
+102: Not receiving full msg from 3
+101: DEAD at header (fd = 7) 0/32
+101: Not receiving full msg from 3
+100: DEAD at header (fd = 15) 0/32
+100: Not receiving full msg from 11
+102: DEAD at header (fd = 15) 0/32
+102: Not receiving full msg from 11
+101: DEAD at header (fd = 15) 0/32
+101: Not receiving full msg from 11
+100: DEAD at header (fd = 8) 0/32
+100: Not receiving full msg from 4
+102: DEAD at header (fd = 8) 0/32
+102: Not receiving full msg from 4
+101: DEAD at header (fd = 8) 0/32
+101: Not receiving full msg from 4
+101: DEAD at header (fd = 11) 0/32
+101: Not receiving full msg from 7
+100: DEAD at header (fd = 11) 0/32
+100: Not receiving full msg from 7
+102: DEAD at header (fd = 11) 0/32
+102: Not receiving full msg from 7
+102: Finished 10211 transactions in 8.134303567 seconds (gen 15211)
+201: Not receiving enough bytes from 102 (0, 0)
+100: DEAD at header (fd = 4) 0/32
+100: Not receiving full msg from 0
+101: DEAD at header (fd = 4) 0/32
+101: Not receiving full msg from 0
+101: DEAD at header (fd = 16) 0/32
+101: Not receiving full msg from 12
+100: DEAD at header (fd = 16) 0/32
+100: Not receiving full msg from 12
+100: DEAD at header (fd = 20) 0/32
+100: Not receiving full msg from 201
+101: DEAD at header (fd = 20) 0/32
+101: Not receiving full msg from 201
+100: Finished 26844 transactions in 8.353897361 seconds (gen 31844)
+101: Finished 19994 transactions in 8.268340325 seconds (gen 24994)

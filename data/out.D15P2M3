@@ -1,0 +1,87 @@
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/preprocessor/preproc: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/preprocessor/preproc: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/preprocessor/preproc: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+101: WARNING: unknown node 10611 sent us a message of size 10615
+102: DEAD at header (fd = 7) 0/32
+102: Not receiving full msg from 3
+100: DEAD at header (fd = 7) 0/32
+100: Not receiving full msg from 3
+102: Finished 513382 transactions in 8.103523489 seconds (gen 518382)
+00: Not receiving enough bytes from 102 (0, -1)
+01: Not receiving enough bytes from 102 (0, -1)
+02: Not receiving enough bytes from 102 (0, -1)
+04: Not receiving enough bytes from 102 (0, -1)
+05: Not receiving enough bytes from 102 (0, -1)
+08: Not receiving enough bytes from 102 (0, -1)
+09: Not receiving enough bytes from 102 (0, -1)
+12: Not receiving enough bytes from 102 (0, -1)
+13: Not receiving enough bytes from 102 (0, -1)
+14: Not receiving enough bytes from 102 (0, -1)
+07: Not receiving enough bytes from 102 (0, -1)
+06: Not receiving enough bytes from 102 (0, -1)
+02: Not receiving enough bytes from fd 8 (0, 0)
+06: Not receiving enough bytes from fd 12 (0, 0)
+101: DEAD at body (fd = 20) 14465/993056
+101: Not receiving full msg from 201
+14: Not receiving enough bytes from fd 20 (0, 0)
+05: Not receiving enough bytes from fd 11 (0, 0)
+100: DEAD at header (fd = 20) 0/32
+100: Not receiving full msg from 201
+00: Not receiving enough bytes from fd 6 (0, 0)
+08: Not receiving enough bytes from fd 14 (0, 0)
+09: Not receiving enough bytes from fd 15 (0, 0)
+12: Not receiving enough bytes from fd 18 (0, 0)
+01: Not receiving enough bytes from fd 7 (0, 0)
+13: Not receiving enough bytes from fd 19 (0, 0)
+07: Not receiving enough bytes from fd 13 (0, 0)
+04: Not receiving enough bytes from fd 10 (0, 0)
+04: Not receiving enough bytes from fd 9 (0, 0)
+05: Not receiving enough bytes from fd 10 (0, 0)
+06: Not receiving enough bytes from fd 11 (0, 0)
+07: Not receiving enough bytes from fd 12 (0, 0)
+12: Not receiving enough bytes from fd 17 (0, 0)
+14: Not receiving enough bytes from fd 19 (0, 0)
+100: DEAD at body (fd = 19) 7208/7296
+100: Not receiving full msg from 200
+101: DEAD at header (fd = 19) 0/32
+101: Not receiving full msg from 200
+101: Finished 1824 transactions in 8.234147238 seconds (gen 6815)
+02: Not receiving enough bytes from fd 7 (0, 0)
+09: Not receiving enough bytes from fd 14 (0, 0)
+02: Not receiving enough bytes from 101 (0, -1)
+05: Not receiving enough bytes from 101 (0, -1)
+06: Not receiving enough bytes from 101 (0, -1)
+07: Not receiving enough bytes from 101 (0, -1)
+09: Not receiving enough bytes from 101 (0, -1)
+12: Not receiving enough bytes from 101 (0, -1)
+100: DEAD at header (fd = 12) 0/32
+100: Not receiving full msg from 8
+14: Not receiving enough bytes from 101 (0, -1)
+100: DEAD at header (fd = 14) 0/32
+100: Not receiving full msg from 10
+100: Finished 514136 transactions in 8.341240809 seconds (gen 519134)
+05: Not receiving enough bytes from 100 (0, -1)
+07: Not receiving enough bytes from 100 (0, 0)
+06: Not receiving enough bytes from 100 (0, -1)
+09: Not receiving enough bytes from 100 (0, -1)
+12: Not receiving enough bytes from 100 (0, -1)
+14: Not receiving enough bytes from 100 (0, -1)

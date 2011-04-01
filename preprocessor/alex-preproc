@@ -1,0 +1,18 @@
+how long to wait
+how many txn in one batch (hard limit)
+# of cores in each DB slice
+# of parallel preproc nodes
+# of replicated preproc nodes
+
+Preproc input: clintID, txntypeID, args, readset, writeset, duration
+               ducation += network latency
+
+Scheduler input: Jobs{ Duration, NodeList }
+                 ConflictGraph
+Scheduler output: Schedule with minimal finishing time w.r.t. conflict graph
+
+Preproc output: 1. msg to slices (idealy only those involves)
+                2. msg to replica
+                3. write to storage (or replica may be the storage)
+                4. wait for storage to return
+                5. msg to slices: good to go

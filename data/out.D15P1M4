@@ -1,0 +1,51 @@
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/preprocessor/preproc: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+101: DEAD at header (fd = 14) 0/32
+101: Not receiving full msg from 10
+101: Finished 367677 transactions in 8.315472609 seconds (gen 372676)
+01: Not receiving enough bytes from 101 (0, -1)
+12: Not receiving enough bytes from 101 (0, -1)
+13: Not receiving enough bytes from 101 (0, -1)
+02: Not receiving enough bytes from 101 (0, -1)
+05: Not receiving enough bytes from 101 (0, -1)
+14: Not receiving enough bytes from 101 (0, -1)
+07: Not receiving enough bytes from 101 (0, -1)
+08: Not receiving enough bytes from 101 (0, -1)
+06: Not receiving enough bytes from 101 (0, -1)
+100: Finished 375419 transactions in 8.425102808 seconds (gen 380419)
+06: Not receiving enough bytes from 100 (0, -1)
+01: Not receiving enough bytes from 100 (0, -1)
+05: Not receiving enough bytes from 100 (0, -1)
+12: Not receiving enough bytes from 100 (0, -1)
+13: Not receiving enough bytes from 100 (0, -1)
+08: Not receiving enough bytes from 100 (0, -1)
+07: Not receiving enough bytes from 100 (0, -1)
+14: Not receiving enough bytes from 100 (0, -1)
+02: Not receiving enough bytes from 100 (0, -1)
+102: Finished 362225 transactions in 8.238217049 seconds (gen 367225)
+07: Not receiving enough bytes from 102 (0, -1)
+08: Not receiving enough bytes from 102 (0, -1)
+12: Not receiving enough bytes from 102 (0, -1)
+13: Not receiving enough bytes from 102 (0, -1)
+14: Not receiving enough bytes from 102 (0, -1)
+103: Finished 355929 transactions in 8.129617926 seconds (gen 360929)
+14: Not receiving enough bytes from 103 (0, -1)
+08: Not receiving enough bytes from 103 (0, -1)

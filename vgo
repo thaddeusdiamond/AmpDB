@@ -1,0 +1,4 @@
+#!/bin/bash
+
+utils/cluster test.conf db/main preprocessor/preproc mediator/mediator -v
+

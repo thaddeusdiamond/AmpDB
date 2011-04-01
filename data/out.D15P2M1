@@ -1,0 +1,36 @@
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/preprocessor/preproc: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/preprocessor/preproc: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+/home/accts/sw475/research/deter-db/mediator/mediator: no process found
+/home/accts/sw475/research/deter-db/utils/dummy-db: no process found
+100: DEAD at header (fd = 14) 0/32
+100: Not receiving full msg from 10
+100: DEAD at header (fd = 7) 0/32
+100: Not receiving full msg from 3
+100: Finished 778849 transactions in 8.326481991 seconds (gen 783849)
+01: Not receiving enough bytes from 100 (0, -1)
+02: Not receiving enough bytes from 100 (0, 0)
+07: Not receiving enough bytes from 100 (0, 0)
+08: Not receiving enough bytes from 100 (0, 0)
+09: Not receiving enough bytes from 100 (0, 0)
+12: Not receiving enough bytes from 100 (0, -1)
+13: Not receiving enough bytes from 100 (0, 0)
+14: Not receiving enough bytes from 100 (0, 0)
+13: Not receiving enough bytes from fd 19 (0, 0)
+09: Not receiving enough bytes from fd 15 (0, 0)
+01: Not receiving enough bytes from fd 7 (0, 0)
+08: Not receiving enough bytes from fd 14 (0, 0)
+14: Not receiving enough bytes from fd 20 (0, 0)
+14: Not receiving enough bytes from fd 19 (0, 0)
