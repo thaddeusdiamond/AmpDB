@@ -9,8 +9,7 @@
 
 #include "tpc_c.h"                              // tpc_c library
         
-int Part;                                       // Machine partition #
-int WarehouseMask = 0;
+Key Part;                                       // Machine partition #
 
 map<Key, Warehouse>   w_table;                  // Database representation (.h)
 map<Key, District>    d_table;                  //      tables are arrays
@@ -35,7 +34,7 @@ void fill_with_nums(int start, int length, char *string) {
 }
 
 bool warehouse_local(Key w_id) {
-    return (WarehouseMask & (1 << w_id));
+    return (w_id >> 48 == Part);
 }
 
 /* <----------------------- END RAND FUNCS -----------------------> */
@@ -43,23 +42,29 @@ bool warehouse_local(Key w_id) {
 
 /* tpccinit(): Initialize random database to perform work on */
 void tpccinit() {
-    Key w, d, c, s, i;                          // New keys
+    int w, d, c, s, i;                          // New keys
+    Key w_id, d_id, c_id, s_id;
     srand( time(NULL) );
     for(w = Part * MAXW; w < (Part + 1) * MAXW; w++) {
-        createwarehouse(w);
-        WarehouseMask = WarehouseMask | (1 << w);
+        w_id = w | (Part << 48) | (W_TABLE_ID << 32);
+        createwarehouse(w_id);
         for(d = w * DPERW; d < (w + 1) * DPERW; d++) {
-            createdistrict(d, w);
-            for(c = d * CPERD; c < (d + 1) * CPERD; c++)
-                createcustomer(c, d, w);
+            d_id = d | (Part << 48) | (D_TABLE_ID << 32);
+            createdistrict(d_id, w_id);
+            for(c = d * CPERD; c < (d + 1) * CPERD; c++) {
+                c_id = c | (Part << 48) | (C_TABLE_ID << 32);
+                createcustomer(c_id, d_id, w_id);
+            }
         }
-        for(s = w * ITEMS; s < (w + 1) * ITEMS; s++)
-            createstock(s, w);
+        for(s = w * ITEMS; s < (w + 1) * ITEMS; s++) {
+            s_id = s | (Part << 48) | (S_TABLE_ID << 32);
+            createstock(s_id, w_id);
+        }
     }
     
     srand(100);                                 // Seed random deterministically
     for(i = 0; i < ITEMS; i++)
-        createitem(i);
+        createitem(i | (Part << 48) | (I_TABLE_ID << 32));
 }
 
 /* createwarehouse(key): Insert random warehouse into DB */

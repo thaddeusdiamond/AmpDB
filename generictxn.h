@@ -3,12 +3,23 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+
+using namespace std;
 
 enum IsolationLevel{
     SERIALIZABLE = 0,
     SNAPSHOT,
     READ_COMMITTED,
     READ_UNCOMMITTED,
+};
+
+enum TransactionType{
+    NO_ID = 0,
+    PAY_ID,
+    OS_ID,
+    DEL_ID,
+    SL_ID,
 };
 
 class GenericTxn {
@@ -28,7 +39,7 @@ public:
         txnid    = s[0];
         txnid_unordered = s[1];
         source_mediator = s[2];
-        txntype  = s[3];
+        txntype  = (TransactionType) s[3];
         isolationlevel = (IsolationLevel) s[4];
         rsetsize = s[5];
         wsetsize = s[6];
@@ -50,7 +61,7 @@ public:
         s[0] = txnid;
         s[1] = txnid_unordered;
         s[2] = source_mediator;
-        s[3] = txntype;
+        s[3] = (int64_t) txntype;
         s[4] = (int64_t) isolationlevel;
         s[5] = rsetsize;
         s[6] = wsetsize;
@@ -68,11 +79,38 @@ public:
                   sizeof(int64_t);
         return serialize_to(malloc(*length), length);
     }
+    
+    void toString() {
+        cout << "TXNID: " << txnid << endl;
+        cout << "\ttxnid_unordered\t" << txnid_unordered << endl;
+        cout << "\tsource_mediator\t" << source_mediator << endl;
+        cout << "\ttxntype\t\t" << txntype << endl;
+        cout << "\tisolationlevel\t" << isolationlevel << endl;
+        cout << "\tmultipartition\t" << mp << endl;
+        
+        cout << "\trsetsize\t\t" << rsetsize << endl;
+        for (int i = 0; i < rsetsize; i++)
+            cout << "\t\trset #" << i << ": " << rset[i] << endl;
+        cout << "\twsetsize\t\t" << wsetsize << endl;
+        for (int i = 0; i < wsetsize; i++)
+            cout << "\t\twset #" << i << ": " << wset[i] << endl;
+        cout << "\targcount\t\t" << argcount << endl;
+        cout << "\t\tw_id: " << args[0] << endl;
+        cout << "\t\td_id: " << args[1] << endl;
+        cout << "\t\tc_id: " << args[2] << endl;
+        cout << "\t\tol_cnt: " << args[3] << endl;
+        cout << "\t\tsystime: " << args[4] << endl;
+        for (int i = 0; i < (argcount - 5) / 3; i++) {
+            cout << "\t\tware #" << i << ": " << args[i + 5] << endl;
+            cout << "\t\titem #" << i << ": " << args[i + 20] << endl;
+            cout << "\t\tqty #" << i << ": " << args[i + 35] << endl;
+        }
+    }
    
     int64_t txnid;
     int64_t txnid_unordered;
     int64_t source_mediator;
-    int64_t txntype;
+    TransactionType txntype;
     IsolationLevel isolationlevel;
     bool mp;
     int64_t rsetsize;

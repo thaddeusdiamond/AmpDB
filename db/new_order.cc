@@ -77,7 +77,8 @@ int processNewOrder(Key txnid, Key w_id, Key d_id, Key c_id, int ol_cnt,
         ol.ol_delivery_d = systime;
         
         Item i = i_table[ol.getItem()];         // Read correct item and stock
-        Stock s = s_table[ol.getItem()];
+        Key s_id = ((ol_w[ol_number] << 32) >> 32) * ITEMS + ol.getItem();
+        Stock s = s_table[s_id | ((ol_w[ol_number] >> 32) << 32)];
         decrease_supply(ol_w[ol_number], s, ol.ol_quantity);
         
         ol.ol_amount = (ol.ol_quantity * i.i_price)* 

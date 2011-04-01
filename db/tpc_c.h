@@ -10,13 +10,15 @@
 
 #define _TPCC_H_
 
-#include <map>                  // Std lib headers
+#include "../global.h"          // Std Library Headers 
+#include "../generictxn.h"
+#include <map>               
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <ctime>
 #include <stdint.h>
 #include <iostream>
-#include "../generictxn.h"
 
 #define Deque CircularBuffer    // Data structure aliases
 #define Key int64_t
@@ -370,14 +372,14 @@ class History {
 
 
 /////   TABLE LISTINGS [UNIQUE IDENTIFIERS]    /////
-#define  W_TABLE_ID   0
-#define  D_TABLE_ID   1
-#define  C_TABLE_ID   2
-#define  NO_TABLE_ID  3
-#define  O_TABLE_ID   4
-#define  OL_TABLE_ID  5
-#define  S_TABLE_ID   6
-#define  I_TABLE_ID   7
+#define  W_TABLE_ID   (Key) 0
+#define  D_TABLE_ID   (Key) 1
+#define  C_TABLE_ID   (Key) 2
+#define  NO_TABLE_ID  (Key) 3
+#define  O_TABLE_ID   (Key) 4
+#define  OL_TABLE_ID  (Key) 5
+#define  S_TABLE_ID   (Key) 6
+#define  I_TABLE_ID   (Key) 7
 
 #define  NUM_TABLES   8
 

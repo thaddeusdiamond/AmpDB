@@ -10,23 +10,9 @@
 
 #define _LOADGEN_H_
 
- 
-#include "../generictxn.h"          // Std Library Headers
-#include <map>                  
-#include <string>
-#include <cstring>
-#include <stdint.h>
-#include <iostream>
-#include <cstdlib>
- 
-/* <---------------------- BEGIN TPC GLOBAL -----------------------> */
+#include "../db/tpc_c.h"
 
-/////    TRANSACTION TYPE KEYS      /////
-#define NO_ID  0
-#define PAY_ID 1
-#define OS_ID  2
-#define DEL_ID 3
-#define SL_ID  4
+/* <---------------------- BEGIN TPC GLOBAL -----------------------> */
 
 /////    TRANSACTION PERCENTAGES    /////
 #define NO_PER   0.45
@@ -45,9 +31,8 @@
 
 /* <---------------------- BEGIN FUNC DECS -----------------------> */
 
-GenericTxn *generate();
-GenericTxn *generate_txn(bool valid, bool mp, bool last, 
-                         Key type)
+GenericTxn *generate(int id, int w_ids);
+GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type);
 
 /* <----------------------- END FUNC DECS ------------------------> */
 
