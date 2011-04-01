@@ -58,6 +58,7 @@ int payment(Key *args, Key id) {
     
     History h(c_id, c.getDistrict(), c.getWarehouse(), d_id, w_id);
     sprintf(h.h_data, "%s    %s", w.w_name, d.d_name);
+    h.h_date = h_date;
     
     h_table.add(h);                             // Insert new history row
 }

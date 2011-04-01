@@ -32,20 +32,21 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
     
     switch (type) {
         
+        int w, ware, d, c, i, h_date;                   // Variables used inside
+        int wset_index, rset_index, argc_index;
+        Key w_id, d_id, c_id, i_id, part;
+            
         /*              NEW ORDER TXN                               */
         case NO_ID:
-            int wset_index, rset_index, argc_index;     // wset, rset, argc
             rset_index = 8;
             wset_index = rset_index + txn_buffer[5]; 
             argc_index = wset_index + txn_buffer[6];
             
-            int w, ware, d, c, i;                       // Randomized warehouse,
-            w = rand() % NumWarehouses;                 //      district, cust,
-            d = rand() % DPERW + w * DPERW;             //      id's and corr.
+            w = rand() % NumWarehouses;                 // Randomized ware, dist
+            d = rand() % DPERW + w * DPERW;             //      cust id's & corr
             c = rand() % CPERD + d * CPERD;             //      partition
             
             /*                      Set key bits                    */
-            Key w_id, d_id, c_id, i_id, part;
             part = (w / MAXW);
             w_id = w | (part << 48) | (W_TABLE_ID << 32);
             d_id = d | (part << 48) | (D_TABLE_ID << 32);
@@ -92,7 +93,33 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
                 txn_buffer[argc_index++ + 30] = (rand() % 10) + 1;
             }
             break;
-    
+        
+        case PAY_ID:
+            w = rand() % NumWarehouses;                 //      district, cust,
+            d = rand() % DPERW + w * DPERW;             //      id's and corr.
+            c = rand() % CPERD + d * CPERD;             //      partition
+            
+            /*                      Set key bits                    */
+            part = (w / MAXW);
+            c_id = c | (part << 48) | (C_TABLE_ID << 32);
+            
+            double h_amount;
+            h_amount = RANF() * 499 + 1;
+            h_date = time(NULL);
+            
+            if (mp)
+                ware = rand() % NumWarehouses;
+                while (ware / MAXW == part)       //  ENSURE MP
+                    ware = rand() % NumWarehouses;
+                w = ware;
+                
+            w_id = w | (part << 48) | (W_TABLE_ID << 32);
+            d_id = rand() % DPERW + ware * DPERW;       //  Placement district
+               
+            if (last)
+                ;               // HOW DO I REPRESENT THIS AS A KEY ON CLI???
+            else
+                c_id = c | (part << 48) | (C_TABLE_ID << 32);
     }
     
     GenericTxn *t = new GenericTxn(txn_buffer);
