@@ -18,23 +18,48 @@
 
 using namespace std;
 
+/*                  Customized Secondary Index Class (FAST)             */
+template <class T>
+class DBIndex {
+    public:
+        DBIndex() { exists = false;}        // Null constructor
+        DBIndex(T i, Key k) {
+            key = k;                        // Initialize (index, key) pair
+            index = i;
+            exists = true;
+        }
+        
+        void toString() {
+            cout << "INDEX: " << index << "\t\tKEY: " << key << endl;
+        }
+        
+        T index;                            // (index, pair) instance
+        Key key;
+        bool exists;
+};
+
+/*                  Quick, Low Overhead Map (DB) Implementation         */
 template <class T>
 class QuickMap {
 
     public:
         QuickMap() {}                       // Null constructor
         QuickMap(Key t_id, int size) {
-            table_id = t_id;
-            table = new T[size];
+            table_id = t_id;                // Initialize table_id, table itself
+            table = new T[size];            //      and table size
+            table_size = size;
+            
+            for (int i = 0; i < size; i++)
+                table[i] = T();
         }
         
-        /*              DELETE FUNCTION IS BROKEN???            */
+        /*                Overloaded Delete Operator                    */
         static void operator delete(void *p) {
-            delete[] ((QuickMap<T> *) p)->table;              // Free array memory
-            free(p);
+            delete[] ((QuickMap<T> *) p)->table;
+            free(p);                        // Free array memory and object
         }
   
-        /*                  Overload array access                       */
+        /*                  Overload Array Access                       */
         T& operator[](const Key id) throw (const char *) {
             int entry = hash(id);
             if (entry >= 0)
@@ -42,12 +67,32 @@ class QuickMap {
             
             throw "Invalid Database Access";// Entry does not exist
         }
+        
+        DBIndex<char *>& operator[](char *sec_key) throw (const char *) {
+            return table[hash(sec_key)];    // Hash table quick lookup
+        }
 
     protected:
         Key table_id;                       // Table this represents
-        T *table;
+        T *table;                           // Table itself
+        int table_size;                     // Table size
+        
+        // Calculates a numeric hash value for string <b>
+        int calcHash(char *s) {
+	        int sum = 0;			        // Running sum to return
+            for (sum = 0; *s; s++)
+		        sum = (sum<<3) ^ *s;	    // Bit shift operation
+		    return abs(sum % table_size);	// Return key value
+        }
         
         /*                  Quick (constant time) Hash Fxn              */
+        int hash(char *key) {
+            int start = calcHash(key);      // Find first index
+            while(table[start].exists && strcmp(table[start].index, key) != 0)
+                start++;
+            return start;                   // First null or 
+        }
+        
         int hash(Key id) {
             Key table;                      // Get key table
             table = (int16_t) (id >> 32);

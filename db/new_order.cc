@@ -18,6 +18,7 @@ extern QuickMap<OrderLine>  ol_table;
 extern QuickMap<Stock>      s_table;
 extern QuickMap<Item>       i_table;
 
+
 /* new_order(Keys ...): 
  *  This is the main newOrder function and is the only one accessed directly
  */                    

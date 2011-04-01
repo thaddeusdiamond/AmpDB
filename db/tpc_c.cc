@@ -20,6 +20,8 @@ QuickMap<OrderLine>  ol_table(OL_TABLE_ID, MAXOL);
 QuickMap<Stock>      s_table(S_TABLE_ID, MAXS);
 QuickMap<Item>       i_table(I_TABLE_ID, ITEMS);
 
+QuickMap< DBIndex<char *> >   c_last_index(C_TABLE_ID, MAXC);
+
 /* <---------------------- BEGIN RAND FUNCS -----------------------> */
 
 void fill_with_random(int start, int length, char *string) {
@@ -126,7 +128,10 @@ void createcustomer(Key c_id, Key c_d_id, Key c_w_id) {
     
     fill_with_random(0, 16, c.c_first);         // Randomized first, middle
     fill_with_random(0, 2, c.c_middle);         //      last
-    fill_with_random(0, 16, c.c_last);
+    fill_with_random(0, 16, c.c_last);          
+    
+    /*                       SECONDARY INDEX                            */
+    c_last_index[c.c_last] = DBIndex<char *>(c.c_last, c_id);
     
     fill_with_nums(0, 3, c.c_street_1);         // ## RANDOM
     c.c_street_1[3] = ' ';                      //      (format for addresses)
