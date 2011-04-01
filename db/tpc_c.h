@@ -18,6 +18,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
+#include <cstdio>
 #include <stdint.h>
 #include <iostream>
 
@@ -30,9 +31,10 @@ using namespace std;
 //////////////    WAREHOUSE CLASS DEFINITION    //////////////
 class Warehouse {
     public:
-        Warehouse() {}          // Null constructor
+        Warehouse() { exists = false; } // Null constructor
         Warehouse(Key w) {
-            w_id = w;           // Public constructor w/id
+            w_id = w;                   // Public constructor w/id
+            exists = true;
         }
         
         /*                  ACCESSOR METHODS            */
@@ -60,6 +62,7 @@ class Warehouse {
         char w_zip[10];         // Warehouse zip code           (FIX LEN)
         double w_tax;           // Taxes paid by warehouse      (SIGNED [4,4])
         double w_ytd;           // YTD earnings                 (SIGNED [12,2])
+        bool exists;
     protected:
         Key  w_id;              // Primary key for warehouse
 };
@@ -67,11 +70,12 @@ class Warehouse {
 //////////////    DISTRICT CLASS DEFINITION    //////////////
 class District {
     public:
-        District() {}           // Null constructor
+        District() { exists = false; }  // Null constructor
         District(Key d, Key w) {
-            d_id = d;           // Public constructor, set primary key
-            d_w_id = w;         //      warehouse district key, and DNOID = 0
+            d_id = d;                   // Public constructor, set primary key
+            d_w_id = w;                 //      warehouse district key, and DNOID = 0
             d_next_o_id = 0;
+            exists = true;
         }
         
         /*                  ACCESSOR METHODS            */
@@ -103,6 +107,7 @@ class District {
         double d_tax;           // Taxes paid by warehouse      (SIGNED [4,4])
         double d_ytd;           // YTD earnings                 (SIGNED [12,2])
         int d_next_o_id;        // Next available order #
+        bool exists;
     protected:
         Key  d_id;              // Primary key for district
         Key  d_w_id;            // Primary (foreign) key [district by warehouse]
@@ -111,11 +116,12 @@ class District {
 //////////////    CUSTOMER CLASS DEFINITION    //////////////
 class Customer {
     public:
-        Customer() {}           // Null constructor
+        Customer() { exists = false; }           // Null constructor
         Customer(Key c, Key d, Key w) {
             c_id = c;           // Public constructor w/id's. Set all three
             c_d_id = d;         //      for customer, district, and warehouse
             c_w_id = w;
+            exists = true;
         }
         
         /*                  ACCESSOR METHODS            */
@@ -163,6 +169,7 @@ class Customer {
         int    c_payment_cnt;   // Payment count                (NUMERIC 4)
         int    c_delivery_cnt;  // Delivery count               (NUMERIC 4)
         char   c_data[501];     // Miscellaneous information    (VAR LEN)
+        bool exists;
     protected:
         Key c_id;               // Primary customer key
         Key c_d_id;             // Primary (foreign) district key
@@ -172,17 +179,19 @@ class Customer {
 //////////////    NEW-ORDER CLASS DEFINITION    //////////////
 class NewOrder {
     public:
-        NewOrder() {}           // Null constructor
+        NewOrder() { exists = false; }           // Null constructor
         NewOrder(Key o, Key d, Key w) {
             no_o_id = o;        // Public constructor.  Set the order,
             no_d_id = d;        //      district and warehouse keys
             no_w_id = w;
+            exists = true;
         }
         
         /*                  ACCESSOR METHODS            */
         Key getID()         { return no_o_id; }
         Key getDistrict()   { return no_d_id; }
         Key getWarehouse()  { return no_w_id; }
+        bool exists;
 
         /*                  NEW-ORDER TABLE SCHEMA          */
     protected:
@@ -194,12 +203,13 @@ class NewOrder {
 //////////////    ORDER CLASS DEFINITION    //////////////
 class Order {
     public:
-        Order() {}              // Null constructor
+        Order() { exists = false; }              // Null constructor
         Order(Key o, Key d, Key w, Key c) {
             o_id = o;           // Public constructor.  Set the order, district,
             o_d_id = d;         //      warehouse and customer keys
             o_w_id = w;
             o_c_id = c;
+            exists = true;
         }
 
         /*                  ACCESSOR METHODS            */
@@ -213,6 +223,7 @@ class Order {
         int  o_carrier_id;      // Order carrier id             (Unique IDs)
         int  o_ol_cnt;          // Order-Line count             (NUMERIC 2)
         bool o_all_local;       // Boolean true if all local    (NUMERIC 1)
+        bool exists;
     protected:
         Key  o_id;              // Primary order key
         Key  o_d_id;            // Primary (foreign) district key
@@ -223,7 +234,7 @@ class Order {
 //////////////    ORDER-LINE CLASS DEFINITION    //////////////
 class OrderLine {
     public:
-        OrderLine() {}          // Null constructor
+        OrderLine() { exists = false; }          // Null constructor
         OrderLine(Key o, Key d, Key w, int n, Key i, Key q) {
             ol_o_id = o;        // Public constructor.  Set values for order-
             ol_d_id = d;        //      line, district, warehouse, #, item,
@@ -232,6 +243,7 @@ class OrderLine {
             ol_i_id = i;
             ol_supply_w_id = w;
             ol_quantity = q;
+            exists = true;
         }
 
         /*                  ACCESSOR METHODS            */
@@ -248,6 +260,7 @@ class OrderLine {
         double ol_amount;       // Amount $ in the order-line   (SIGNED [6,2])
         char ol_dist_info[25];  // Information on district      (FIX LEN)
         Key  ol_supply_w_id;    // Primary (foreign) supply key
+        bool exists;
     protected:
         Key  ol_o_id;           // Primary order-line key
         Key  ol_d_id;           // Primary (foreign) district key
@@ -258,9 +271,10 @@ class OrderLine {
 //////////////    ITEM CLASS DEFINITION    //////////////
 class Item {
     public:
-        Item() {}               // Null constructor
+        Item() { exists = false; }      // Null constructor
         Item(Key i) {
-            i_id = i;           // Public constructor.  Set item id
+            i_id = i;                   // Public constructor.  Set item id
+            exists = true;
         }
         
         /*                  ACCESSOR METHODS            */
@@ -278,6 +292,7 @@ class Item {
         char   i_name[25];      // Item name                    (VAR LEN)
         double i_price;         // Item price                   (NUMERIC [5,2])
         char   i_data[51];      // Miscellaneous information    (VAR LEN)
+        bool exists;
     protected:
         Key    i_id;            // Primary item key
 };
@@ -285,12 +300,13 @@ class Item {
 //////////////    STOCK CLASS DEFINITION    //////////////
 class Stock {
     public:
-        Stock() {}              // Null constructor
+        Stock() { exists = false; } // Null constructor
         Stock(Key i, Key w) {
-            s_i_id = i;         // Public constructor.  Set the stock item
-            s_w_id = w;         //      and warehouse keys.  Randomize qty
+            s_i_id = i;             // Public constructor.  Set the stock item
+            s_w_id = w;             //      and warehouse keys.  Randomize qty
             s_quantity = rand() % 256;
             s_ytd = s_order_cnt = s_remote_cnt = 0;
+            exists = true;
         }
         
         /*                  ACCESSOR METHODS            */
@@ -318,6 +334,7 @@ class Stock {
         int  s_order_cnt;       // Order count                  (NUMERIC 4)
         int  s_remote_cnt;      // Remote count                 (NUMERIC 4)
         char s_data[51];        // Miscellaneous info           (VAR LEN)
+        bool exists;
     protected:
         Key  s_i_id;            // Primary stock key
         Key  s_w_id;            // Primary (foreign) warehouse key
@@ -326,13 +343,14 @@ class Stock {
 //////////////    HISTORY CLASS DEFINITION    //////////////
 class History {
     public:
-        History() {}            // Null constructor
+        History() { exists = false; }            // Null constructor
         History(Key c, Key c_d, Key c_w, Key d, Key w) {
             h_c_id = c;         // Public constructor.  Set customer,
             h_c_d_id = c_d;     //      customer district, customer warehouse,
             h_c_w_id = c_w;     //      district and warehouse keys.
             h_d_id = d;
             h_w_id = w;
+            exists = true;
         }
         
         /*                  ACCESSOR METHODS            */
@@ -346,6 +364,7 @@ class History {
         int    h_date;          // Date of history entry        (DATE AND TIME)
         double h_amount;        // Amount for history entry     (SIGNED [6,2])
         char   h_data[25];      // Miscellaneous info           (VAR LEN)
+        bool exists;
     protected:
         Key  h_c_id;            // Primary (foreign) customer key
         Key  h_c_d_id;          // Primary (foreign) customer district key

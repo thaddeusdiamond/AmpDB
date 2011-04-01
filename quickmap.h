@@ -53,6 +53,18 @@ class QuickMap {
                 table[i] = T();
         }
         
+        /*                Ability to add to end of table [HISTORY!!!]   */
+        void add(T element) {
+            /* if (table[table_size-1].exists) { 
+                table_size *= 2;            //  REALLOCATE SPACE
+                T *newTable = new T[table_size];
+                memcpy(newTable, table, size * sizeof(T));
+                delete[] table;
+                table = newTable;
+            } */
+            
+        }
+        
         /*                Overloaded Delete Operator                    */
         static void operator delete(void *p) {
             delete[] ((QuickMap<T> *) p)->table;

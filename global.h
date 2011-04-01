@@ -44,8 +44,7 @@ enum TxnStatus {
 #define  OL_TABLE_ID  (Key) 5
 #define  S_TABLE_ID   (Key) 6
 #define  I_TABLE_ID   (Key) 7
-
-#define  NUM_TABLES   8
+#define  H_TABLE_ID   (Key) 8
 
 
 /////   DEFINE TRANSACTION TYPES    /////

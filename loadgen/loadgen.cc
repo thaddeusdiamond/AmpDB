@@ -89,7 +89,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
                 } else                                  //      INVALID ITEM
                     txn_buffer[argc_index + 15] = -1;
                                                         //      RANDOM QUANTITY
-                txn_buffer[argc_index++ + 30] = (rand() % 100) + 1;
+                txn_buffer[argc_index++ + 30] = (rand() % 10) + 1;
             }
             break;
     
