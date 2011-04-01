@@ -30,6 +30,9 @@
 #include "conflict_resolver.h"
 #include "scheduler.h"
 #include "txninfo.h"
+#include "../circularbuffer.h"
+
+#define DEQUE CircularBuffer
 
 // #define VERBOSE 1
 
@@ -164,7 +167,7 @@ void MasterStrategy::RunServer(){
         int64_t time_left = _config.wait_time;
 
         do{
-            deque<GenericTxn> txns;
+            DEQUE<GenericTxn> txns;
             _remote.FillIncomingTxns(&txns, time_left);
 
 #if VERBOSE

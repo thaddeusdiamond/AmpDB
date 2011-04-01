@@ -12,6 +12,7 @@
 #include <set>
 #include <utility>
 #include <vector>
+#include <deque>
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -42,6 +43,7 @@ const int RSETSIZE_IDX = 5;
 const int WSETSIZE_IDX = 6;
 const int RSET_OFFSET = 8;
 
+using std::deque;
 using std::make_pair;
 using std::map;
 using std::set;
@@ -87,12 +89,12 @@ int MediatorServer::StartServer(){
     signal(SIGTERM, &stop_server);
     signal(SIGPIPE, &stop_server);
 
-    DEQUE<GenericTxn> queued_txns;
-    DEQUE<int> queued_origin;
+    deque<GenericTxn> queued_txns;
+    deque<int> queued_origin;
     _result_count = 0;
     while(server_running){
-        DEQUE<GenericTxn> txns;
-        DEQUE<int> origin;
+        deque<GenericTxn> txns;
+        deque<int> origin;
 
 #if ! GENERATE_TXN
         _remote.FillIncomingTxns(&txns, 0, &origin);
@@ -129,8 +131,8 @@ int MediatorServer::StartServer(){
         queued_txns.clear();
         queued_origin.clear();
 
-        DEQUE<int>::const_iterator jt = origin.begin();
-        for(DEQUE<GenericTxn>::iterator it = txns.begin();
+        deque<int>::const_iterator jt = origin.begin();
+        for(deque<GenericTxn>::iterator it = txns.begin();
             it != txns.end(); ++it, ++jt){
             it->txnid_unordered = it->txnid = _next_txnid++;
             it->source_mediator = _config.myNodeID;

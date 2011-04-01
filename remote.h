@@ -9,7 +9,6 @@
 #include <map>
 #include <set>
 #include "circularbuffer.h"
-
 #include "config.h"
 
 using std::deque;
