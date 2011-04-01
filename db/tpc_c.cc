@@ -8,17 +8,17 @@
  */
 
 #include "tpc_c.h"                              // tpc_c library
-        
+       
 Key Part;                                       // Machine partition #
 
-map<Key, Warehouse>   w_table;                  // Database representation (.h)
-map<Key, District>    d_table;                  //      tables are arrays
-map<Key, Customer>    c_table;
-map<Key, NewOrder>    no_table;
-map<Key, Order>       o_table;
-map<Key, OrderLine>   ol_table;
-map<Key, Stock>       s_table;
-map<Key, Item>        i_table;
+QuickMap<Warehouse>  w_table(W_TABLE_ID, MAXW); // Database representation (.h)
+QuickMap<District>   d_table(D_TABLE_ID, MAXD); //      tables are arrays
+QuickMap<Customer>   c_table(C_TABLE_ID, MAXC);
+QuickMap<NewOrder>   no_table(NO_TABLE_ID, MAXNO);
+QuickMap<Order>      o_table(O_TABLE_ID, MAXO);
+QuickMap<OrderLine>  ol_table(OL_TABLE_ID, MAXOL);
+QuickMap<Stock>      s_table(S_TABLE_ID, MAXS);
+QuickMap<Item>       i_table(I_TABLE_ID, ITEMS);
 
 /* <---------------------- BEGIN RAND FUNCS -----------------------> */
 

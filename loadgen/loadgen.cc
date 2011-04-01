@@ -66,7 +66,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             for(int j = 0; j < ol_cnt; j++) {
                 if (mp) {                               //      MULTIPARTITION
                     ware = rand() % NumWarehouses;
-                    while (!j && ware == w)             //          Insurance
+                    while (!j && ware / MAXW == part)             //          Insurance
                         ware = rand() % NumWarehouses;
                     
                     w = ware;

@@ -9,14 +9,14 @@
 
 extern int Part;                                // Machine partition #
 
-extern map<Key, Warehouse>   w_table;           // Database representation (.h)
-extern map<Key, District>    d_table;           //      tables are arrays
-extern map<Key, Customer>    c_table;
-extern map<Key, NewOrder>    no_table;
-extern map<Key, Order>       o_table;
-extern map<Key, OrderLine>   ol_table;
-extern map<Key, Stock>       s_table;
-extern map<Key, Item>        i_table;
+extern QuickMap<Warehouse>  w_table;
+extern QuickMap<District>   d_table;
+extern QuickMap<Customer>   c_table;
+extern QuickMap<NewOrder>   no_table;
+extern QuickMap<Order>      o_table;
+extern QuickMap<OrderLine>  ol_table;
+extern QuickMap<Stock>      s_table;
+extern QuickMap<Item>       i_table;
 
 /* new_order(Keys ...): 
  *  This is the main newOrder function and is the only one accessed directly
