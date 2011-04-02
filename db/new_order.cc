@@ -29,8 +29,11 @@ int new_order(Key *args, Key id) {
                                                 //      arrays
                                                 
     // Set warehouse, district, customer IDs; Set orderline count and systime
-    (w_id = args[0]) && (d_id = args[1]) && (c_id = args[2]);
-    (ol_cnt = args[3]) && (systime = args[4]);
+    w_id = args[0];
+    d_id = args[1];
+    c_id = args[2];
+    ol_cnt = args[3];
+    systime = args[4];
     
     for(int j = 0; j < ol_cnt; j++) {           // For each orderline
         ol_w[j] = args[5 + j];                  //      Set the warehouse, item,

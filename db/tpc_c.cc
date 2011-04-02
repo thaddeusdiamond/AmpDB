@@ -210,17 +210,17 @@ int main(int argc, char *argv[]) {
     
     int argcount;                               // # args, type of txn, id
     string type;
-    Key txnid;      
+    Key id;      
     
     while (true) {        
         cin >> type;                            // Read in variables
-        cin >> txnid;
+        cin >> id;
         cin >> argcount;
 
         Key args[argcount];                     // Static args array
         for (int i = 0; i < argcount; i++)
             cin >> args[i];
-            
+        
         /*     NEWORDER TXN:        READ PHASE                  */
         if (!type.compare("NOR")) {
             bool reads_okay = true;
@@ -232,16 +232,14 @@ int main(int argc, char *argv[]) {
         
         /*     NEWORDER TXN:        WRITE PHASE                 */
         } else if (!type.compare("NO")) {
-            // Process New Order
-            cout << new_order(args, txnid) << endl; 
+            cout << new_order(args, id) << endl; 
     
-        
         /*     PAYMENT TXN:         READ PHASE                 */
         } else if (!type.compare("PAYR")) {
         
         /*     PAYMENT TXN:         WRITE PHASE                 */
         } else if (!type.compare("PAY")) {
-        
+            cout << payment(args, id) << endl; 
         }
     }
     

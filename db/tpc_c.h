@@ -387,14 +387,17 @@ bool warehouse_local(Key w_id);
 void tpccinit();
 void tpccdump();
 
-// TODO: paymenttxn, orderstatustxn, deliverytxn, stockleveltxn,
-//       customerlookup  [All take Txn *t as parameter]
+// TODO: orderstatustxn, deliverytxn, stockleveltxn
 
+    /*                      New Order                       */
 int new_order(Key *args, Key txnid);
 int processNewOrder(Key txnid, Key w_id, Key d_id, Key c_id, int ol_cnt, 
                      Key *ol_w, Key *ol_i, int *ol_q, int systime);
 bool decrease_supply(Key w, Stock s, int qty);
 bool check_reads(Key item);
+
+    /*                     Payment Txn                      */
+Key payment(Key *args, Key prev_c_id);
 
 /* <----------------------- END FUNC DECS ------------------------> */
 

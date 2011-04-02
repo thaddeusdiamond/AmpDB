@@ -27,39 +27,36 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
     txn_buffer[3] = type;                               // txn_type
     txn_buffer[4] = SERIALIZABLE;                       // isolation_level
     
+    int w, ware, d, c, i, h_date;                   // Variables used inside
+    int wset_index, rset_index, argc_index;
+    Key w_id, d_id, c_id, i_id, part;
+    
     switch (type) {
-        int w, ware, d, c, i, h_date;                   // Variables used inside
-        int wset_index, rset_index, argc_index;
-        Key w_id, d_id, c_id, i_id, part;
-            
-        rset_index = 8;                                 // All same read set ind
         /*                      NEW ORDER TXN                               */
         case NO_ID:
             rsize = 2 + (mp*ol_cnt) + (valid*ol_cnt);
             wsize = 1 + (valid*ol_cnt);
             asize = 35 + ol_cnt;
             
-            wset_index = rset_index + rsize; 
+            rset_index = 8;                             // All same read set ind
+            wset_index = rset_index + rsize;
             argc_index = wset_index + wsize;
             
             w = rand() % NumWarehouses;                 // Randomized ware, dist
             d = rand() % DPERW + w * DPERW;             //      cust id's & corr
             c = rand() % CPERD + d * CPERD;             //      partition
-            
+      
             /*                      Set key bits                    */
             part = (w / MAXW);
             w_id = w | (part << 48) | (W_TABLE_ID << 32);
             d_id = d | (part << 48) | (D_TABLE_ID << 32);
             c_id = c | (part << 48) | (C_TABLE_ID << 32);
 
-            cout << w_id << '\t' << d_id << '\t' << c_id << endl;
-            
-
             /*                   Set read/write sets                */
             txn_buffer[argc_index++] = txn_buffer[rset_index++] = w_id;
             txn_buffer[argc_index++] = txn_buffer[wset_index++] = d_id;
             txn_buffer[argc_index++] = txn_buffer[rset_index++] = c_id;
-
+    
             txn_buffer[argc_index++] = ol_cnt;
             txn_buffer[argc_index++] = time(NULL);
             
@@ -67,13 +64,13 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             for(int j = 0; j < ol_cnt; j++) {
                 if (mp) {                               //      MULTIPARTITION
                     ware = rand() % NumWarehouses;
-                    while (!j && ware / MAXW == part)             //          Insurance
+                    while (!j && ware / MAXW == part)   //          Insurance
                         ware = rand() % NumWarehouses;
                     
                     w = ware;
                     part = w / MAXW;
                     w_id = w | (part << 48) | (W_TABLE_ID << 32);
-                    
+         
                     txn_buffer[argc_index] = w_id;                  
                     txn_buffer[rset_index++] = w_id;
                 } else                                  //      SINGLE PARTITION
@@ -82,7 +79,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
                 if (valid) {                            //      VALID ITEM
                     i = rand() % ITEMS;
                     i_id = i | (part << 48) | (I_TABLE_ID << 32);
-                    
+          
                     txn_buffer[argc_index + 15] = i_id;
                     txn_buffer[rset_index++] = i_id;
                     txn_buffer[wset_index++] = (w * ITEMS + i) | (part << 48) | 
@@ -96,7 +93,9 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
         
         case PAY_ID:
             rsize = 0;  wsize = 3;  asize = 6;          // Read & write set
-            wset_index = rset_index + rsize; argc_index = wset_index + wsize;
+            rset_index = 8;
+            wset_index = rset_index + rsize; 
+            argc_index = wset_index + wsize;
             
             w = rand() % NumWarehouses;                 //      district, cust,
             d = rand() % DPERW + w * DPERW;             //      id's and corr.
@@ -112,12 +111,12 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             
             if (mp)
                 ware = rand() % NumWarehouses;
-                while (ware / MAXW == part)       //  ENSURE MP
+                while (ware / MAXW == part)             //  ENSURE MP
                     ware = rand() % NumWarehouses;
                 w = ware;
                 
             w_id = w | (part << 48) | (W_TABLE_ID << 32);
-            d_id = rand() % DPERW + ware * DPERW;       //  Placement district
+            d_id = d | (part << 48) | (D_TABLE_ID << 32);
                
             if (last)
                 ;               // HOW DO I REPRESENT THIS AS A KEY ON CLI???
@@ -132,6 +131,9 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             txn_buffer[argc_index++] = (Key) last;
             txn_buffer[wset_index++] = txn_buffer[argc_index++] = c_id; 
             
+            break;
+        
+        default:
             break;
     }
     
@@ -191,12 +193,12 @@ GenericTxn *generate(int id, int w_ids) {
         return generate_txn(true, false, false, SL_ID); // sp STOCK-LEVEL
 }
 
-/*int main() {
+int main() {
     ////////////////////////// DEBUG ////////////////////////////
     GenericTxn *t;
-    t = generate(1, 2);
+    t = generate(1, 4);
     
     t->toString();
 
     delete t;
-} */
+}

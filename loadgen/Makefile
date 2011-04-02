@@ -7,8 +7,8 @@ CFLAGS =  -g3 -std=c99 -pedantic -Wall
 all:    loadgen.o
 
 # Create Loadgen from loadgen.o
-#Loadgen:  loadgen.o
-#	${CXX} ${CFLAGS} -lm $^ -o $@
+Loadgen:  loadgen.o
+	${CXX} ${CFLAGS} -lm $^ -o $@
 
 # Rule to create loadgen.o (link library header file)
 loadgen.o: loadgen.cc loadgen.h

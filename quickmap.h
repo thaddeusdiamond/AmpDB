@@ -68,15 +68,15 @@ class QuickMap {
             throw "Invalid Database Access";// Entry does not exist
         }
         
-        /*T& operator[](const char *key) throw (const char *) {
+        T& operator[](char *key) throw (const char *) {
             int loc;
             while ((loc = hash(key)) < 0)
-                rehash();
+                rehash();                   // History table rehash
             return table[loc];              // Hash table quick lookup 
-        }  <------- ERROR!!!! */
+        } 
         
-        DBIndex<char *>& operator[](const char *sec_key) throw (const char *) {
-            return table[hash(sec_key)];    // Hash table quick lookup
+        DBIndex<char *>& operator[](const char *key) throw (const char *) {
+            return table[sec_index(key)];   // Hash table quick lookup
         }
 
     protected:
@@ -94,7 +94,7 @@ class QuickMap {
             table = newTable;
         }
         
-        // Calculates a numeric hash value for string <b>
+        /*          Calculates a numeric hash value for string <b>      */
         int calcHash(char *s) {
 	        int sum = 0;			        // Running sum to return
             for (sum = 0; *s; s++)
@@ -103,7 +103,30 @@ class QuickMap {
         }
         
         /*                  Quick (constant time) Hash Fxn              */
+        int hash(Key id) {
+            Key table;                      // Get key table
+            table = (int16_t) (id >> 32);
+            
+            if (table == table_id)          // Our table is valid for key
+                return table_conversion((int16_t) (id >> 32), (int32_t) id);
+            else
+                return -1;                  // Key not in this table
+        }
+        
+        /*                      Hash for History Table              */
         int hash(char *key) {
+            int start = calcHash(key);      // Find first index
+            int i = 0;
+            while(i++ < table_size && table[start].exists)
+                start++;
+                
+            if (i == table_size + 1)        // Table needs to be rehashed
+                return -1;
+            return start;                   // First null or 
+        }
+        
+        /*                      Secondary Key Lookup                */
+        int sec_index(char *key) {
             int start = calcHash(key);      // Find first index
             int i = 0;
             while(i++ < table_size && table[start].exists && 
@@ -115,18 +138,8 @@ class QuickMap {
             return start;                   // First null or 
         }
         
-        int hash(Key id) {
-            Key table;                      // Get key table
-            table = (int16_t) (id >> 32);
-            
-            if (table == table_id)          // Our table is valid for key
-                return table_conversion((int16_t) (id >> 32), (int32_t) id);
-            else
-                return -1;                  // Key not in this table
-        }
-        
+        /*                  CONTEXT SWITCH FOR TABLES               */
         int table_conversion(int table, int id) {
-            /*              CONTEXT SWITCH FOR TABLES               */
             switch (table) {
                 case W_TABLE_ID:            // WAREHOUSE LOOKUP
                     return id % MAXW;       //      modulo max warehouses

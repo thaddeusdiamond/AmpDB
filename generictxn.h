@@ -100,7 +100,7 @@ public:
         cout << "\t\tc_id: " << args[2] << endl;
         cout << "\t\tol_cnt: " << args[3] << endl;
         cout << "\t\tsystime: " << args[4] << endl;
-        for (int i = 0; i < (argcount - 5) / 3; i++) {
+        for (int i = 0; i < argcount - 35; i++) {
             cout << "\t\tware #" << i << ": " << args[i + 5] << endl;
             cout << "\t\titem #" << i << ": " << args[i + 20] << endl;
             cout << "\t\tqty #" << i << ": " << args[i + 35] << endl;
