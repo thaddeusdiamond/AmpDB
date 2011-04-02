@@ -53,18 +53,6 @@ class QuickMap {
                 table[i] = T();
         }
         
-        /*                Ability to add to end of table [HISTORY!!!]   */
-        void add(T element) {
-            /* if (table[table_size-1].exists) { 
-                table_size *= 2;            //  REALLOCATE SPACE
-                T *newTable = new T[table_size];
-                memcpy(newTable, table, size * sizeof(T));
-                delete[] table;
-                table = newTable;
-            } */
-            
-        }
-        
         /*                Overloaded Delete Operator                    */
         static void operator delete(void *p) {
             delete[] ((QuickMap<T> *) p)->table;
@@ -80,7 +68,14 @@ class QuickMap {
             throw "Invalid Database Access";// Entry does not exist
         }
         
-        DBIndex<char *>& operator[](char *sec_key) throw (const char *) {
+        /*T& operator[](const char *key) throw (const char *) {
+            int loc;
+            while ((loc = hash(key)) < 0)
+                rehash();
+            return table[loc];              // Hash table quick lookup 
+        }  <------- ERROR!!!! */
+        
+        DBIndex<char *>& operator[](const char *sec_key) throw (const char *) {
             return table[hash(sec_key)];    // Hash table quick lookup
         }
 
@@ -88,6 +83,16 @@ class QuickMap {
         Key table_id;                       // Table this represents
         T *table;                           // Table itself
         int table_size;                     // Table size
+        
+        /*                Ability to add to end of table                */
+        void rehash() {
+            table_size *= 2;                //  Reallocate space
+            T *newTable = new T[table_size];
+            memcpy(newTable, table, table_size * sizeof(T));
+            
+            delete[] table;                 //  Garbage collection
+            table = newTable;
+        }
         
         // Calculates a numeric hash value for string <b>
         int calcHash(char *s) {
@@ -100,8 +105,13 @@ class QuickMap {
         /*                  Quick (constant time) Hash Fxn              */
         int hash(char *key) {
             int start = calcHash(key);      // Find first index
-            while(table[start].exists && strcmp(table[start].index, key) != 0)
+            int i = 0;
+            while(i++ < table_size && table[start].exists && 
+                    strcmp(table[start].index, key) != 0)
                 start++;
+                
+            if (i == table_size + 1)        // Table needs to be rehashed
+                return -1;
             return start;                   // First null or 
         }
         

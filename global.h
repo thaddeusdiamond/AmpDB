@@ -33,6 +33,8 @@ enum TxnStatus {
 #define MAXOL MAXW * OLPERW
 #define ITEMS 100000
 #define MAXS  MAXW * ITEMS
+#define HPERW 30000
+#define MAXH MAXW * HPERW
 
 
 /////   TABLE LISTINGS [UNIQUE IDENTIFIERS]    /////
