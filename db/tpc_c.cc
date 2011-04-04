@@ -211,6 +211,19 @@ int main(int argc, char *argv[]) {
     int argcount;                               // # args, type of txn, id
     string type;
     Key id;      
+
+        cin >> type;                            // Read in variables
+        cin >> id;
+        cin >> argcount;
+
+        Key args[argcount];                     // Static args array
+        for (int i = 0; i < argcount; i++)
+            cin >> args[i];
+    time_t cur_time = time(NULL) + 60
+    for (int i = 0; time(NULL) < cur_time; i++) {
+	new_order(args, i);
+    }
+    cout << "NEW ORDER: " << i << " transactions" << endl;
     
     while (true) {        
         cin >> type;                            // Read in variables
