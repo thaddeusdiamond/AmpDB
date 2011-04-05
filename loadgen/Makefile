@@ -2,7 +2,7 @@
 # Makefile for "Loadgen"				DDBMS
 
 # Standard compiler options
-CFLAGS =  -g3 -std=c99 -pedantic -Wall
+CFLAGS =  -g3
 
 all:    loadgen.o
 
@@ -12,6 +12,7 @@ Loadgen:  loadgen.o
 
 # Rule to create loadgen.o (link library header file)
 loadgen.o: loadgen.cc loadgen.h
+	${CXX} -c ${CFLAGS} $^
 
 
 # Clean up
