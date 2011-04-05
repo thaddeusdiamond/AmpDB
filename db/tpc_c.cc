@@ -220,6 +220,7 @@ int main(int argc, char *argv[]) {
     	        new_order(t->args, j);          //      NEW ORDER
 	        else
 	            payment(t->args, t->args[5]);   //      PAYMENT
+	        delete t;
         }
         cout << "ROUND " << k << ": " << j << " transactions" << endl;
         sum += j;
