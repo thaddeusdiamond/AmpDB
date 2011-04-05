@@ -7,7 +7,7 @@ CFLAGS =  -g3 -std=c99 -pedantic -Wall
 all:    TPC-C
 
 # Create TPC-C from tpc_c.o and new_order.o
-TPC-C:  tpc_c.o new_order.o payment.o
+TPC-C:  tpc_c.o new_order.o payment.o ../loadgen/loadgen.o
 	${CXX} ${CFLAGS} -lm $^ -o $@
 
 # Rule to create tpc_c.o (link library header file)

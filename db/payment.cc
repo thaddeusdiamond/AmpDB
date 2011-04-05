@@ -43,16 +43,16 @@ Key payment(Key *args, Key prev_c_id) {
         d.d_ytd += h_amount;
     }
     
+    /*                  Secondary Key-ing Support                       */
+    if (last) {                             // LAST NAME SECONDARY LOOKUP
+        c_id = c_last_index[args[5]].key;
+        if (c_id != prev_c_id)
+            return c_id;                    // SEND BACK TO MEDIATOR
+    } else                                  // PRIMARY KEY LOOKUP
+        c_id = args[5];
+    
     /*                  Customer is Local To Partition                  */
     if (Part == (c_id >> 48)) {
-        /*                  Secondary Key-ing Support                       */
-        if (last) {                             // LAST NAME SECONDARY LOOKUP
-            c_id = c_last_index[args[5]].key;
-            if (c_id != prev_c_id)
-                return c_id;                    // SEND BACK TO MEDIATOR
-        } else                                  // PRIMARY KEY LOOKUP
-            c_id = args[5];
-    
         Customer  c = c_table[c_id];            // Retrieve customer
         c.c_balance -= h_amount;                //      and write update info
         c.c_ytd_payment += h_amount;
@@ -66,7 +66,7 @@ Key payment(Key *args, Key prev_c_id) {
         h.h_date = h_date;
         
         char h_id[129]; sprintf(h_id, "%lld%d", h.getCustomer(), h_date);
-        h_table[h_id] = h;                      // Insert new history row
+        //h_table[h_id] = h;                      // Insert new history row
     }
     
     return true;

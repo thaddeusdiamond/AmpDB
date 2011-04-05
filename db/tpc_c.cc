@@ -205,25 +205,40 @@ int main(int argc, char *argv[]) {
     
     Part = atoi(argv[1]);
     cout << "Initializing benchmarks, please wait..." << endl;
-    tpccinit();
+    tpccinit();                                 // Initialize databases
+    cout << "INITIALIZED!" << endl;
+    
+    /*<---------------  BENCHMARKING TPC-C BY ITSELF  ------------->*/
+    int j, sum, low, high;
+    GenericTxn *t;
+    sum = low = high = 0;
+    for (int k = 0; k < 200; k++) {             // 200 Iterations
+        time_t cur_time = time(NULL) + 1;       // Current Time
+        for (j = 0; time(NULL) < cur_time; j++) {
+	        t = generate(j, 4);                 // Generate rand txn
+	        if (t->txntype == NO_ID)
+    	        new_order(t->args, j);          //      NEW ORDER
+	        else
+	            payment(t->args, t->args[5]);   //      PAYMENT
+        }
+        cout << "ROUND " << k << ": " << j << " transactions" << endl;
+        sum += j;
+        if (!low || j < low)
+            low = j;
+        if (j > high)
+            high = j;
+    }
+    /*                      PRINT RESULTS                           */
+    cout << "Average over 200 iterations: " << (sum / 200.0) << endl;
+    cout << "LOW: " << low << endl << "HIGH: " << high << endl;
+    
+    /*<-------------------  END BENCHMARK  ------------------------>*/
+    
     cout << "Please enter transaction arguments now:" << endl;
     
     int argcount;                               // # args, type of txn, id
     string type;
     Key id;      
-
-        cin >> type;                            // Read in variables
-        cin >> id;
-        cin >> argcount;
-
-        Key args[argcount];                     // Static args array
-        for (int i = 0; i < argcount; i++)
-            cin >> args[i];
-    time_t cur_time = time(NULL) + 60
-    for (int i = 0; time(NULL) < cur_time; i++) {
-	new_order(args, i);
-    }
-    cout << "NEW ORDER: " << i << " transactions" << endl;
     
     while (true) {        
         cin >> type;                            // Read in variables

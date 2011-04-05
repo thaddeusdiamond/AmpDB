@@ -119,7 +119,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             d_id = d | (part << 48) | (D_TABLE_ID << 32);
                
             if (last)
-                ;               // HOW DO I REPRESENT THIS AS A KEY ON CLI???
+                c_id = c | (part << 48) | (C_TABLE_ID << 32);               // HOW DO I REPRESENT THIS AS A KEY ON CLI???
             else
                 c_id = c | (part << 48) | (C_TABLE_ID << 32);
             
@@ -193,7 +193,7 @@ GenericTxn *generate(int id, int w_ids) {
         return generate_txn(true, false, false, SL_ID); // sp STOCK-LEVEL
 }
 
-int main() {
+/*int main() {
     ////////////////////////// DEBUG ////////////////////////////
     GenericTxn *t;
     t = generate(1, 4);
@@ -201,4 +201,4 @@ int main() {
     t->toString();
 
     delete t;
-}
+}*/

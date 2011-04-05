@@ -13,6 +13,7 @@
 #include "../global.h"          // Std Library Headers 
 #include "../generictxn.h"
 #include "../quickmap.h"
+#include "../loadgen/loadgen.h"
 #include <map>               
 #include <string>
 #include <cstring>
