@@ -1,9 +1,9 @@
-PROG=main
+PROG=lm
 
 CXXFLAGS=-g -O2 -Wno-deprecated -Wall
 LDFLAGS=
 
-SRCS=main.cc ../remote.cc ../config.cc
+SRCS=lm.cc ../remote.cc ../config.cc
 OBJS=$(SRCS:.cc=.o)
 
 all: $(PROG)

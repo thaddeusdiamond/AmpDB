@@ -194,13 +194,7 @@ void processNewTxn(GenericTxn gt) {
     
     // request locks
     KEY r;
-    for(int j = 0; j < t->rsetsize; j++) {
-        if(part((r = t->rset[j])) == PART) {
-            if(!locks.count(r))
-                locks[r] = new Lock();
-            locks[r]->lock(t);
-        }
-    }
+        
     for(int j = 0; j < t->wsetsize; j++) {
         if(part((r = t->wset[j])) == PART) {
             if(!locks.count(r))
@@ -208,6 +202,17 @@ void processNewTxn(GenericTxn gt) {
             locks[r]->lock(t);
         }
     }
+
+//    // THIS IS AN AWFUL HACK (TODO: FIX IT)
+//    // since TPC-C (NO/Payment only) has no read-write conflicts, omit locking read items
+//    for(int j = 0; j < t->rsetsize; j++) {
+//        if(part((r = t->rset[j])) == PART) {
+//            if(!locks.count(r))
+//                locks[r] = new Lock();
+//            locks[r]->lock(t);
+//        }
+//    }
+
         
     // start txn
     if(t->lockwaits == 0)
