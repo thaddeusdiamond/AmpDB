@@ -13,6 +13,7 @@
 #include "../global.h"          // Std Library Headers 
 #include "../generictxn.h"
 #include "../quickmap.h"
+#include "../remote.h"
 #include "../loadgen/loadgen.h"
 #include <map>               
 #include <string>
@@ -155,7 +156,7 @@ class Customer {
         /*                  CUSTOMER TABLE SCHEMA            */
         char   c_first[17];     // Customer's first name        (VAR LEN)
         char   c_middle[3];     // Customer's middle initials   (FIX LEN)
-        char   c_last[17];      // Customer's last name         (VAR LEN)
+        Key    c_last;          // Customer's last name         (VAR LEN)
         char   c_street_1[21];  // Street address 1             (VAR LEN)
         char   c_street_2[21];  // Street address 2             (VAR LEN)
         char   c_city[21];      // Customer city                (VAR LEN)

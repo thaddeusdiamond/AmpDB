@@ -1,7 +1,7 @@
 CXXFLAGS=-g -O2 -Wall -Wno-deprecated
 LDFLAGS=
 
-SRCS=config.cc remote.cc global.cc
+SRCS=config.cc remote.cc global.cc nonblock.cc
 OBJS=$(SRCS:.cc=.o)
 
 all: $(OBJS)

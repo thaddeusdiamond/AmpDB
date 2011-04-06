@@ -237,8 +237,6 @@ Txn *processNewMsg(Message m) {
 // process transaction result returned from the storage layer
 // (this function's calling signature may have to change)
 void processCompletedTxn(Txn *t) {
-    // TODO: get results from storage layer, populate t->reads
-    
     if(!t->mp || t->readphasedone) {
         // txn is done; release locks, clean up, and (TODO) send ack to client
         KEY r;
@@ -326,12 +324,14 @@ int main(int argc, char **argv) {
                 t->run2();
         }
         
-        while(incomingmsgs.size()) {
+        while(incomingtxns.size()) {
             processNewTxn(incomingtxns.dequeue());
         }
         
-//        foreach txn *t from storage layer {
-//            processCompletedTxn(t, other args?);
+//        foreach txnid t from storage layer {
+//            Txn *t = txns[t];
+//            populate(t->reads);
+//            processCompletedTxn(t);
 //        }
 
     }

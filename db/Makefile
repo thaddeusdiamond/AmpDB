@@ -7,7 +7,7 @@ CFLAGS =  -g3
 all:    TPC-C
 
 # Create TPC-C from tpc_c.o and new_order.o
-TPC-C:  tpc_c.o new_order.o payment.o ../loadgen/loadgen.o
+TPC-C:  tpc_c.o new_order.o payment.o ../loadgen/loadgen.o ../quickmap.h ../global.h
 	${CXX} ${CFLAGS} -lm $^ -o $@
 
 # Rule to create tpc_c.o (link library header file)

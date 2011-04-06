@@ -19,7 +19,7 @@ extern QuickMap<Stock>      s_table;
 extern QuickMap<Item>       i_table;
 extern QuickMap<History>    h_table;
 
-extern QuickMap< DBIndex<char *> >   c_last_index;
+extern QuickMap< DBIndex<Key> >   c_last_index;
 
 /* payment(Keys ...): 
  *  This is the main payment function and is the only one accessed directly
@@ -47,7 +47,7 @@ Key payment(Key *args, Key prev_c_id) {
     if (last) {                             // LAST NAME SECONDARY LOOKUP
         c_id = c_last_index[args[5]].key;
         if (c_id != prev_c_id)
-            return c_id;                    // SEND BACK TO MEDIATOR
+            return c_id;                    // SEND BACK TO PREPROCESSOR
     } else                                  // PRIMARY KEY LOOKUP
         c_id = args[5];
     

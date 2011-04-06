@@ -21,7 +21,7 @@ QuickMap<Stock>      s_table(S_TABLE_ID, MAXS);
 QuickMap<Item>       i_table(I_TABLE_ID, ITEMS);
 QuickMap<History>    h_table(H_TABLE_ID, 1);
 
-QuickMap< DBIndex<char *> >   c_last_index(C_TABLE_ID, MAXC);
+QuickMap< DBIndex<Key> >   c_last_index(C_TABLE_ID, MAXC);
 
 /* <---------------------- BEGIN RAND FUNCS -----------------------> */
 
@@ -129,10 +129,10 @@ void createcustomer(Key c_id, Key c_d_id, Key c_w_id) {
     
     fill_with_random(0, 16, c.c_first);         // Randomized first, middle
     fill_with_random(0, 2, c.c_middle);         //      last
-    fill_with_random(0, 16, c.c_last);          
+    c.c_last = c_id;           
     
     /*                       SECONDARY INDEX                            */
-    c_last_index[c.c_last] = DBIndex<char *>(c.c_last, c_id);
+    c_last_index[c.c_last] = DBIndex<Key>(c.c_last, c_id);
     
     fill_with_nums(0, 3, c.c_street_1);         // ## RANDOM
     c.c_street_1[3] = ' ';                      //      (format for addresses)
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
     tpccinit();                                 // Initialize databases
     cout << "INITIALIZED!" << endl;
     
-    /*<---------------  BENCHMARKING TPC-C BY ITSELF  ------------->*/
+    /*<---------------  BENCHMARKING TPC-C BY ITSELF  ------------->
     int j, sum, low, high;
     GenericTxn *t;
     sum = low = high = 0;
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
         if (j > high)
             high = j;
     }
-    /*                      PRINT RESULTS                           */
+    /*                      PRINT RESULTS                           
     cout << "Average over 200 iterations: " << (sum / 200.0) << endl;
     cout << "LOW: " << low << endl << "HIGH: " << high << endl;
     
@@ -257,20 +257,32 @@ int main(int argc, char *argv[]) {
                 if (!check_reads(args[i]))
                     reads_okay = false;         // One variable not okay
             }
-            cout << reads_okay << endl;
+            cout << id << " " << reads_okay << endl;
         
         /*     NEWORDER TXN:        WRITE PHASE                 */
         } else if (!type.compare("NO")) {
-            cout << new_order(args, id) << endl; 
+            cout << id << " " << new_order(args, id) << endl; 
     
-        /*     PAYMENT TXN:         READ PHASE                 */
+        /*     PAYMENT TXN:         READ PHASE                  
         } else if (!type.compare("PAYR")) {
         
         /*     PAYMENT TXN:         WRITE PHASE                 */
         } else if (!type.compare("PAY")) {
-            cout << payment(args, id) << endl; 
+            cout << id << " " << payment(args, id) << endl; 
         }
     }
+    
+    /*                      FREE ALL MEMORY                     */
+    delete &w_table;
+    delete &d_table;
+    delete &c_table;
+    delete &no_table;
+    delete &o_table;
+    delete &ol_table;
+    delete &s_table;
+    delete &i_table;
+    delete &h_table;
+    delete &c_last_index;
     
     exit(EXIT_FAILURE);                         // DB Server Interrupt
 }

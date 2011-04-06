@@ -56,7 +56,7 @@ class QuickMap {
         /*                Overloaded Delete Operator                    */
         static void operator delete(void *p) {
             delete[] ((QuickMap<T> *) p)->table;
-            free(p);                        // Free array memory and object
+            //free(p);                        // Free array memory and object
         }
   
         /*                  Overload Array Access                       */
@@ -75,9 +75,9 @@ class QuickMap {
             return table[loc];              // Hash table quick lookup 
         } 
         
-        DBIndex<char *>& operator[](const char *key) throw (const char *) {
+        /*DBIndex<Key>& operator[](Key key) throw (const char *) {
             return table[sec_index(key)];   // Hash table quick lookup
-        }
+        }*/
 
     protected:
         Key table_id;                       // Table this represents
@@ -105,10 +105,13 @@ class QuickMap {
         /*                  Quick (constant time) Hash Fxn              */
         int hash(Key id) {
             Key table;                      // Get key table
+            int16_t key, table_id;
             table = (int16_t) (id >> 32);
+            key = (int16_t) (id >> 48);
+            table_id = (int16_t) (id >> 32);
             
             if (table == table_id)          // Our table is valid for key
-                return table_conversion((int16_t) (id >> 32), (int32_t) id);
+                return table_conversion(key, table_id, (int32_t) id);
             else
                 return -1;                  // Key not in this table
         }
@@ -126,7 +129,7 @@ class QuickMap {
         }
         
         /*                      Secondary Key Lookup                */
-        int sec_index(char *key) {
+        int sec_index(Key key) {
             int start = calcHash(key);      // Find first index
             int i = 0;
             while(i++ < table_size && table[start].exists && 
@@ -139,38 +142,38 @@ class QuickMap {
         }
         
         /*                  CONTEXT SWITCH FOR TABLES               */
-        int table_conversion(int table, int id) {
+        int table_conversion(int part, int table, int id) {
             switch (table) {
-                case W_TABLE_ID:            // WAREHOUSE LOOKUP
-                    return id % MAXW;       //      modulo max warehouses
+                case W_TABLE_ID:                // WAREHOUSE LOOKUP
+                    return id - (part * MAXW);  //      modulo max warehouses
                     break;
                     
-                case D_TABLE_ID:            // DISTRICT LOOKUP
-                    return id % MAXD;       //      modulo max districts
+                case D_TABLE_ID:                // DISTRICT LOOKUP
+                    return id - (part * MAXD);  //      modulo max districts
                     break;
                 
-                case C_TABLE_ID:            // CUSTOMER LOOKUP
-                    return id % MAXC;       //      modulo Max Warehouses
+                case C_TABLE_ID:                // CUSTOMER LOOKUP
+                    return id - (part * MAXC);  //      modulo Max Warehouses
                     break;
                 
-                case NO_TABLE_ID:           // NEWORDER LOOKUP
-                    return id % MAXNO;      //      modulo max new orders
+                case NO_TABLE_ID:               // NEWORDER LOOKUP
+                    return id - (part * MAXNO); //      modulo max new orders
                     break;
                 
-                case O_TABLE_ID:            // ORDER LOOKUP
-                    return id % MAXO;       //      modulo max orders
+                case O_TABLE_ID:                // ORDER LOOKUP
+                    return id - (part * MAXO);  //      modulo max orders
                     break;
                 
-                case OL_TABLE_ID:           // ORDERLINE LOOKUP
-                    return id % MAXOL;      //      modulo max orderlines
+                case OL_TABLE_ID:               // ORDERLINE LOOKUP
+                    return id - (part * MAXOL); //      modulo max orderlines
                     break;
                 
-                case S_TABLE_ID:            // STOCK LOOKUP
-                    return id % MAXS;       //      modulo max stock #
+                case S_TABLE_ID:                // STOCK LOOKUP
+                    return id - (part * MAXS);  //      modulo max stock #
                     break;
                     
-                case I_TABLE_ID:            // ITEM LOOKUP
-                    return id % ITEMS;      //      modulo # items
+                case I_TABLE_ID:                // ITEM LOOKUP
+                    return id - (part * ITEMS); //      modulo # items
                     break;
             }
         }

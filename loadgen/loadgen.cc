@@ -29,7 +29,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
     
     int w, ware, d, c, i, h_date;                   // Variables used inside
     int wset_index, rset_index, argc_index;
-    Key w_id, d_id, c_id, i_id, part;
+    Key w_id, d_id, c_id, c_id_2, i_id, part;
     
     switch (type) {
         /*                      NEW ORDER TXN                               */
@@ -117,11 +117,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
                 
             w_id = w | (part << 48) | (W_TABLE_ID << 32);
             d_id = d | (part << 48) | (D_TABLE_ID << 32);
-               
-            if (last)
-                c_id = c | (part << 48) | (C_TABLE_ID << 32);               // HOW DO I REPRESENT THIS AS A KEY ON CLI???
-            else
-                c_id = c | (part << 48) | (C_TABLE_ID << 32);
+            c_id = c | (part << 48) | (C_TABLE_ID << 32);
             
             /*                  Set write set and arg list              */
             txn_buffer[wset_index++] = txn_buffer[argc_index++] = w_id; 
@@ -129,7 +125,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             txn_buffer[argc_index++] = (Key) h_amount;
             txn_buffer[argc_index++] = (Key) h_date;
             txn_buffer[argc_index++] = (Key) last;
-            txn_buffer[wset_index++] = txn_buffer[argc_index++] = c_id; 
+            txn_buffer[wset_index++] = txn_buffer[argc_index++] = c_id;
             
             break;
         
