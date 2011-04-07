@@ -341,11 +341,26 @@ void processCompletedTxn(Txn *t) {
 }
 
 void fillIncomingDBTxns() {
-    while (kbhit()) {
-        map<KEY, VAL> newtxn;                   // Generic new txn
-        cin >> newtxn[0];                       // txnid
-        cin >> newtxn[1];                       // status
-        incomingdbtxns.enqueue(newtxn);
+    map<KEY, VAL> newtxn;                           // Generic new txn
+    KEY i, read_in;
+    int c;
+    
+    i = read_in = 0;
+    while (true) {
+        if (kbhit() && (c = getch())) {
+            if (!isdigit(c)) {
+                newtxn[i++] = read_in;              // Whitespace, put in map
+                if (c == '\n') {
+                    incomingdbtxns.enqueue(newtxn); // Enqueue map
+                    i = 0;                          // Reset loading point
+                }
+                read_in = 0;
+            } else {
+                read_in *= 10;                      // New digit for read_in
+                read_in += c - '0';
+            }
+        } else
+            break;
     }
 }
 

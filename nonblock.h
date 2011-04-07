@@ -2,6 +2,7 @@
 #include <termios.h>
 #include <stdlib.h>
 #include <iostream>
+#include <ctype.h>
 
 using namespace std;
 
