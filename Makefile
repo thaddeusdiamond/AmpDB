@@ -8,6 +8,7 @@ all: $(OBJS)
 	$(MAKE) -C db
 	$(MAKE) -C mediator
 	$(MAKE) -C loadgen
+	$(MAKE) -C lm
 	$(MAKE) -C preprocessor
 	$(MAKE) -C utils
 
@@ -19,5 +20,6 @@ clean:
 	$(MAKE) -C db clean
 	$(MAKE) -C mediator clean
 	$(MAKE) -C loadgen clean
+	$(MAKE) -C lm clean
 	$(MAKE) -C preprocessor clean
 	$(MAKE) -C utils clean

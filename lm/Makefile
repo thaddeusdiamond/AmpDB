@@ -3,7 +3,7 @@ PROG=lm
 CXXFLAGS=-g -O2 -Wno-deprecated -Wall
 LDFLAGS=
 
-SRCS=lm.cc ../remote.cc ../config.cc
+SRCS=lm.cc ../remote.cc ../config.cc ../nonblock.cc
 OBJS=$(SRCS:.cc=.o)
 
 all: $(PROG)

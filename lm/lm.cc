@@ -3,12 +3,14 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <map>
 #include "../circularbuffer.h"
 #include "../global.h"
 #include "../remote.h"
 #include "../generictxn.h"
 #include "../message.h"
+#include "../nonblock.h"
 
 using namespace std;
 #define DEQUE CircularBuffer
@@ -30,7 +32,7 @@ int partitionid;
 DEQUE<Message> incomingmsgs;
 DEQUE<Message> oldmessages;
 DEQUE<GenericTxn> incomingtxns;
-// TODO: input data structure for completed txns from storage layer?
+DEQUE< map<KEY, VAL> > incomingdbtxns;
 
 Configuration *config;
 RemoteConnection *connection;
@@ -113,15 +115,52 @@ public:
     // is ready to be sent to the storage layer for execution. run sends a command
     // to the storage layer starting the appropriate stored procedure running with the args supplied
     void run() {
-        // TODO
+        switch(txntype) {
+            case NO_ID:
+                if (mp)
+                    cout << "NOR ";                     // Perform read (mp)
+                else
+                    cout << "NO ";                      // Perform write (sp)
+                    
+                cout << txnid << " " << argcount << " ";
+                for (int i = 0; i < 6; i++)             // Print out all info
+                    cout << args[i] << " ";             //      and args
+                break;
+                    
+            case PAY_ID:
+                cout << "PAY " << txnid << " " << argcount << " ";
+                for (int i = 0; i < 6; i++)             // Print out all info
+                    cout << args[i] << " ";             //      and args
+                break;
+                
+            
+            case OS_ID:
+            case DEL_ID:
+            case SL_ID:
+                break;
+            
+        }
     }
     
 
     // this function is called (for multipartition txns only) after
     // all messages have been received
     void run2() {
-        // TODO
-        
+        switch(txntype) {
+            case NO_ID:
+                if (mp && reads[0])                     // Successful reads (mp)
+                    cout << "NO " << txnid << " " << argcount << " ";
+                    for (int i = 0; i < 6; i++)         // Print out all info
+                        cout << args[i] << " ";         //      and args
+                        
+                break;                                  // Finish with new order
+                   
+            case PAY_ID:
+            case OS_ID:
+            case DEL_ID:
+            case SL_ID:
+                break;                                  // Do nothing for pay (no mp)
+        }
     }
 
 
@@ -301,6 +340,15 @@ void processCompletedTxn(Txn *t) {
     }
 }
 
+void fillIncomingDBTxns() {
+    while (kbhit()) {
+        map<KEY, VAL> newtxn;                   // Generic new txn
+        cin >> newtxn[0];                       // txnid
+        cin >> newtxn[1];                       // status
+        incomingdbtxns.enqueue(newtxn);
+    }
+}
+
 int main(int argc, char **argv) {
     ginits(atoi(argv[1]), "../test.conf");
 
@@ -315,7 +363,7 @@ int main(int argc, char **argv) {
             // non-blocking input collection
             connection->FillIncomingMessages(&incomingmsgs);
             connection->FillIncomingTxns(&incomingtxns);
-            // TODO: get completed txns from storage layer (NONBLOCKING)
+            fillIncomingDBTxns();
         }
 
         while(incomingmsgs.size()) {
@@ -327,12 +375,13 @@ int main(int argc, char **argv) {
         while(incomingtxns.size()) {
             processNewTxn(incomingtxns.dequeue());
         }
-        
-//        foreach txnid t from storage layer {
-//            Txn *t = txns[t];
-//            populate(t->reads);
-//            processCompletedTxn(t);
-//        }
+
+        while(incomingdbtxns.size()) {
+            map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
+            Txn *t = txns[dbtxn[0]];                // Txn id
+            t->reads[0] = dbtxn[1];                 // Populate reads
+            processCompletedTxn(t);                 // Process completed db txn
+        }
 
     }
     return 0;
