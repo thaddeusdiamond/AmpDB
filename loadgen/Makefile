@@ -12,7 +12,7 @@ Loadgen:  loadgen.o
 
 # Rule to create loadgen.o (link library header file)
 loadgen.o: loadgen.cc loadgen.h
-	${CXX} -c ${CFLAGS} $^
+	${CXX} -c ${CFLAGS} loadgen.cc
 
 
 # Clean up

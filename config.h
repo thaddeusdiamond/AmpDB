@@ -59,6 +59,8 @@ class Configuration{
 
     map<string, string> other_opt;
 
+    virtual ~Configuration(){}
+
   protected:
     int ReadFromFile(const string& filename);
     virtual void ProcessConfigLine(char key[], char value[]);
