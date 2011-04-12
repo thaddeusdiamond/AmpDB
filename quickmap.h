@@ -69,10 +69,11 @@ class QuickMap {
         }
         
         T& operator[](char *key) throw (const char *) {
-            int loc;
-            while ((loc = hash(key)) < 0)
-                rehash();                   // History table rehash
-            return table[loc];              // Hash table quick lookup 
+            int entry = hash(key);
+            if (entry >= 0)
+                return table[entry];        // Hash table quick lookup 
+                
+            throw "Invalid Database Access";// Entry does not exist
         } 
         
         /*DBIndex<Key>& operator[](Key key) throw (const char *) {
@@ -118,14 +119,14 @@ class QuickMap {
         
         /*                      Hash for History Table              */
         int hash(char *key) {
-            int start = calcHash(key);      // Find first index
-            int i = 0;
+            int loc = calcHash(key);        // Find first index
+            /* int i = 0;
             while(i++ < table_size && table[start].exists)
                 start++;
                 
             if (i == table_size + 1)        // Table needs to be rehashed
-                return -1;
-            return start;                   // First null or 
+                return -1; */
+            return loc;                     // First null or 
         }
         
         /*                      Secondary Key Lookup                */

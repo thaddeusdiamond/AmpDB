@@ -19,7 +19,7 @@ QuickMap<Order>      o_table(O_TABLE_ID, MAXO);
 QuickMap<OrderLine>  ol_table(OL_TABLE_ID, MAXOL);
 QuickMap<Stock>      s_table(S_TABLE_ID, MAXS);
 QuickMap<Item>       i_table(I_TABLE_ID, ITEMS);
-QuickMap<History>    h_table(H_TABLE_ID, 1);
+QuickMap<History>    h_table(H_TABLE_ID, HISTORY);
 
 QuickMap< DBIndex<Key> >   c_last_index(C_TABLE_ID, MAXC);
 
@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
         
         /*     PAYMENT TXN:         WRITE PHASE                 */
         } else if (!type.compare("PAY")) {
-            cout << id << " " << payment(args, id) << endl; 
+            cout << id << " " << payment(args) << endl; 
         }
     }
     

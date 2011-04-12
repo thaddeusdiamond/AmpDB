@@ -399,7 +399,7 @@ bool decrease_supply(Key w, Stock s, int qty);
 bool check_reads(Key item);
 
     /*                     Payment Txn                      */
-Key payment(Key *args, Key prev_c_id);
+Key payment(Key *args);
 
 /* <----------------------- END FUNC DECS ------------------------> */
 

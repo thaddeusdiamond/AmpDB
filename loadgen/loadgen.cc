@@ -125,6 +125,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             txn_buffer[argc_index++] = (Key) h_amount;
             txn_buffer[argc_index++] = (Key) h_date;
             txn_buffer[argc_index++] = (Key) last;
+            txn_buffer[wset_index++] = txn_buffer[argc_index++] = -1;
             txn_buffer[wset_index++] = txn_buffer[argc_index++] = c_id;
             
             break;

@@ -21,11 +21,14 @@ extern QuickMap<History>    h_table;
 
 extern QuickMap< DBIndex<Key> >   c_last_index;
 
+Configuration *config;                          // Used in communicating
+RemoteConnection *connection;                   //  w/mediator for 2nd lookup
+
 /* payment(Keys ...): 
  *  This is the main payment function and is the only one accessed directly
  */ 
-Key payment(Key *args, Key prev_c_id) {
-    Key w_id, d_id, c_id;                       // Warehouse, district keys
+Key payment(Key *args) {
+    Key w_id, d_id, c_id, prev_c_id;            // Warehouse, district keys
     int h_amount, h_date, i, j;
     bool last;
     
@@ -34,6 +37,7 @@ Key payment(Key *args, Key prev_c_id) {
     h_amount = args[2];
     h_date = args[3];
     last = args[4];
+    prev_c_id = args[5];
         
     /*                 Warehouse Processed Through Was Local            */
     if (warehouse_local(w_id)) {  
@@ -45,11 +49,16 @@ Key payment(Key *args, Key prev_c_id) {
     
     /*                  Secondary Key-ing Support                       */
     if (last) {                             // LAST NAME SECONDARY LOOKUP
-        c_id = c_last_index[args[5]].key;
-        if (c_id != prev_c_id)
-            return c_id;                    // SEND BACK TO PREPROCESSOR
+        c_id = c_last_index[args[6]].key;
+        if (c_id != prev_c_id) {            // SEND BACK TO MEDIATOR
+            config = new Configuration(Part, "../test.conf");
+            connection = RemoteConnection::GetInstance(*config);
+            args[5] = c_id;
+            connection->SendMediator(Part, args, (size_t) 7);
+            return false;                   // ???? SHOULD I DO THIS ????
+        }
     } else                                  // PRIMARY KEY LOOKUP
-        c_id = args[5];
+        c_id = args[6];
     
     /*                  Customer is Local To Partition                  */
     if (Part == (c_id >> 48)) {
@@ -66,7 +75,7 @@ Key payment(Key *args, Key prev_c_id) {
         h.h_date = h_date;
         
         char h_id[129]; sprintf(h_id, "%lld%d", h.getCustomer(), h_date);
-        //h_table[h_id] = h;                      // Insert new history row
+        h_table[h_id] = h;                      // Insert new history row
     }
     
     return true;
