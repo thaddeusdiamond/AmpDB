@@ -208,18 +208,18 @@ int main(int argc, char *argv[]) {
     tpccinit();                                 // Initialize databases
     cout << "INITIALIZED!" << endl;
     
-    /*<---------------  BENCHMARKING TPC-C BY ITSELF  ------------->
+    /*<---------------  BENCHMARKING TPC-C BY ITSELF  -------------> */
     int j, sum, low, high;
     GenericTxn *t;
     sum = low = high = 0;
     for (int k = 0; k < 200; k++) {             // 200 Iterations
         time_t cur_time = time(NULL) + 1;       // Current Time
         for (j = 0; time(NULL) < cur_time; j++) {
-	        t = generate(j, 4);                 // Generate rand txn
+	        t = generate(j, 10);                // Generate rand txn
 	        if (t->txntype == NO_ID)
     	        new_order(t->args, j);          //      NEW ORDER
 	        else
-	            payment(t->args, t->args[5]);   //      PAYMENT
+	            payment(t->args);               //      PAYMENT
 	        delete t;
         }
         cout << "ROUND " << k << ": " << j << " transactions" << endl;
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
         if (j > high)
             high = j;
     }
-    /*                      PRINT RESULTS                           
+    /*                      PRINT RESULTS                           */
     cout << "Average over 200 iterations: " << (sum / 200.0) << endl;
     cout << "LOW: " << low << endl << "HIGH: " << high << endl;
     

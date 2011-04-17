@@ -156,6 +156,17 @@ public:
                 break;                                  // Finish with new order
                    
             case PAY_ID:
+                /*  ALEX:  I think we should put something in here
+                           about what happens when the secondary
+                           key-ing is necessary and gets sent back to the
+                           mediator.  A message (it would then seem), is
+                           also sent to the lock manager saying we returned
+                           false, no?  Maybe I'm confused as to how 
+                           sendMediator(...) works
+                           
+                                            -- Thad */
+                break;
+            
             case OS_ID:
             case DEL_ID:
             case SL_ID:
