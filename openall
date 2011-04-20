@@ -1,1 +1,0 @@
-gedit db/main.cc db/threads.cc db/txn.cc db/locks.cc db/data.cc &

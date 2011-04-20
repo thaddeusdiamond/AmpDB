@@ -51,7 +51,8 @@ Key payment(Key *args) {
     if (last) {                             // LAST NAME SECONDARY LOOKUP
         c_id = c_last_index[args[6]].key;
         if (c_id != prev_c_id) {            // SEND BACK TO MEDIATOR
-            config = new Configuration(Part, "../test.conf");
+            cout << make_pay_config() << endl;
+            config = new Configuration(Part, "../pay.conf");
             connection = RemoteConnection::GetInstance(*config);
             args[5] = c_id;
             connection->SendMediator(Part, args, (size_t) 7);

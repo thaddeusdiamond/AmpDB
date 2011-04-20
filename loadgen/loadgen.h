@@ -10,6 +10,7 @@
 
 #define _LOADGEN_H_
 
+#include <stdlib.h>
 #include "../db/tpc_c.h"
 
 /* <---------------------- BEGIN TPC GLOBAL -----------------------> */

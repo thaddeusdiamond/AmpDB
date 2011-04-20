@@ -109,12 +109,13 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             h_amount = RANF() * 499 + 1;
             h_date = time(NULL);
             
-            if (mp)
-                ware = rand() % NumWarehouses;
+            if (mp) {
+                ware = (rand() % NumWarehouses);
                 while (ware / MAXW == part)             //  ENSURE MP
                     ware = rand() % NumWarehouses;
                 w = ware;
-                
+            }
+            
             w_id = w | (part << 48) | (W_TABLE_ID << 32);
             d_id = d | (part << 48) | (D_TABLE_ID << 32);
             c_id = c | (part << 48) | (C_TABLE_ID << 32);

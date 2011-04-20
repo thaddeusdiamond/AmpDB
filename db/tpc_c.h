@@ -15,6 +15,7 @@
 #include "../quickmap.h"
 #include "../remote.h"
 #include "../loadgen/loadgen.h"
+#include "../freeport_config.h"
 #include <map>               
 #include <string>
 #include <cstring>
