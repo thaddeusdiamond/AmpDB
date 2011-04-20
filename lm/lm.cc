@@ -376,7 +376,7 @@ void fillIncomingDBTxns() {
 }
 
 int main(int argc, char **argv) {
-    ginits(atoi(argv[1]), "../test.conf");
+    ginits(atoi(argv[2]), argv[1]);
 
     PART = atoi(argv[1]);
     
