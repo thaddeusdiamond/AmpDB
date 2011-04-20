@@ -62,6 +62,7 @@ class QuickMap {
         /*                  Overload Array Access                       */
         T& operator[](const Key id) throw (const char *) {
             int entry = hash(id);
+            //cout << entry << endl;
             if (entry >= 0)
                 return table[entry];        // Hash table quick lookup
             

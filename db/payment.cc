@@ -21,8 +21,8 @@ extern QuickMap<History>    h_table;
 
 extern QuickMap< DBIndex<Key> >   c_last_index;
 
-Configuration *config;                          // Used in communicating
-RemoteConnection *connection;                   //  w/mediator for 2nd lookup
+extern Configuration *config;                    // Used in communicating
+extern RemoteConnection *connection;             //  w/mediator for 2nd lookup
 
 /* payment(Keys ...): 
  *  This is the main payment function and is the only one accessed directly
@@ -40,9 +40,10 @@ Key payment(Key *args) {
     prev_c_id = args[5];
         
     /*                 Warehouse Processed Through Was Local            */
-    if (warehouse_local(w_id)) {  
-        Warehouse w = w_table[w_id];            // Perform reads from the
-        w.w_ytd += h_amount;                    //      databases, then write
+    if (warehouse_local(w_id)) { 
+        //cout << w_id << endl;
+        //Warehouse w = w_table[w_id];            // Perform reads from the
+        //w.w_ytd += h_amount;                    //      databases, then write
         District  d = d_table[d_id];
         d.d_ytd += h_amount;
     }
@@ -51,10 +52,7 @@ Key payment(Key *args) {
     if (last) {                             // LAST NAME SECONDARY LOOKUP
         c_id = c_last_index[args[6]].key;
         if (c_id != prev_c_id) {            // SEND BACK TO MEDIATOR
-            cout << make_pay_config() << endl;
-            config = new Configuration(Part, "../pay.conf");
-            connection = RemoteConnection::GetInstance(*config);
-            args[5] = c_id;
+            args[5] = c_id;          
             connection->SendMediator(Part, args, (size_t) 7);
             return false;                   // ???? SHOULD I DO THIS ????
         }
