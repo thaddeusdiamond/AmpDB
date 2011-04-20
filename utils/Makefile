@@ -1,4 +1,4 @@
-PROG=client dummy-db cluster
+PROG=cluster #client dummy-db 
 
 CXXFLAGS=-g -O2 -Wall -Wno-deprecated
 LDFLAGS=

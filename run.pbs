@@ -1,0 +1,9 @@
+#PBS -q default
+#PBS -lnodes=3:ppn=8
+#PBS -l walltime=4:00:00
+#PBS -m abe -M thomson@cs.yale.edu
+
+cd db
+./makeconf.pl 1 1 1 > test.conf
+utils/cluster test.conf db/TPC-C preprocessor/preproc mediator/mediator
+

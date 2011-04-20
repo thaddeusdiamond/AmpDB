@@ -1,0 +1,5 @@
+#!/bin/bash
+
+qsub -I -lnodes=$1:ppn=8
+
+

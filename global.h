@@ -4,7 +4,7 @@
 #define RANF() ((double)rand()/(1.0+(double)RAND_MAX))
 double gaussian(double s);
 
-double tm();
+double tim();
 void spin(double dur);
 
 enum TxnStatus {

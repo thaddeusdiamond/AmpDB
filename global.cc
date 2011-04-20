@@ -3,10 +3,10 @@
 #include <sys/time.h>
 #include <math.h>
 
-double tm() { struct timeval tv; gettimeofday(&tv, NULL); return tv.tv_sec + tv.tv_usec/1e6; }
+double tim() { struct timeval tv; gettimeofday(&tv, NULL); return tv.tv_sec + tv.tv_usec/1e6; }
 void spin(double dur) {
-    double start = tm();
-    while(tm() < start + dur)
+    double start = tim();
+    while(tim() < start + dur)
         ;
 }
 

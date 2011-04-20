@@ -198,12 +198,14 @@ void createitem(Key i_id) {
 
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
+    if (argc < 2) {
         cerr << "Usage: " << argv[0] << " [PARTITION #]" << endl;
-        return false;                           // Illegal # args
+        //return false;                           // Illegal # args
+        cerr << "Unspecified partition; assuming 0." << endl;
+        Part = 0;
     }
+    else Part = atoi(argv[1]);
     
-    Part = atoi(argv[1]);
     cout << "Initializing benchmarks, please wait..." << endl;
     tpccinit();                                 // Initialize databases
     cout << "INITIALIZED!" << endl;
