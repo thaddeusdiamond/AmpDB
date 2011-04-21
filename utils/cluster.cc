@@ -21,7 +21,6 @@
 
 using std::map;
 using std::vector;
-using namespace std;
 
 enum{ CLIENT_NODE = MEDIATOR_NODE + 1 };
 
@@ -346,7 +345,6 @@ void DeployOne(int nodeID, const Node* node, char* argv[]){
         dup2(pipefd[1], 1);
         dup2(pipefd[1], 2);
         close(pipefd[1]);
-        cout << "execlp'ing: ssh " << strOpt1 << strOpt2 << strOpt3 << "\n" << flush;
         execlp("ssh", "ssh", strOpt1, strOpt2, strOpt3, NULL);
         printf("Node %d spawning failed\n", nodeID);
         exit(-1);

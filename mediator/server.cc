@@ -36,7 +36,8 @@
 
 // #define EXTRA_TXN 1  // generate EXTRA_TXN extra txns for each one from clients
 #if EXTRA_TXN || GENERATE_TXN
-#include "../tpccload.h"
+#include "../loadgen/loadgen.h"
+#define NUM_WAREHOUSE 10
 #endif
 
 const int RSETSIZE_IDX = 5;
@@ -101,7 +102,6 @@ int MediatorServer::StartServer(){
 #else
         {
             int need = GENERATE_TXN - _txn_origin.size() - queued_txns.size();
-            GenericTxn txn;
             if(need <= 0){
                 timespec to_sleep = { 0, 1000000 };  // 1 ms
                 nanosleep(&to_sleep, NULL);
@@ -109,8 +109,9 @@ int MediatorServer::StartServer(){
                 generated += need;
                 origin.resize(need, -1);
                 for(int i = 0; i < need; ++i){
-                    generatetpcctxn(&txn, _config.dbpartitions.size());
-                    txns.push_back(txn);
+                    GenericTxn* txn = generate(0, NUM_WAREHOUSE);
+                    txns.push_back(*txn);
+                    delete txn;
                 }
             }
         }
@@ -171,8 +172,14 @@ int MediatorServer::StartServer(){
         diff_nsec += 1000000000;
         --diff_sec;
     }
+    double sec = diff_sec;
+    sec *= 1000000000;
+    sec += diff_nsec;
+    sec /= 1000000000;
+
     printf("Finished %d transactions in %ld.%09ld seconds (gen %d)\n",
             _result_count, diff_sec, diff_nsec, generated);
+    printf("throughput = %f txns/sec\n", _result_count / sec);
 #endif  // GENERATE_TXN
     return 0;
 }
