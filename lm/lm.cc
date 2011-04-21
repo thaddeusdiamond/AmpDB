@@ -107,6 +107,8 @@ public:
         readphasedone = false;
         lockwaits = 0;
         totalmessages = 0;
+        
+        cout << mp << endl;
         if(mp) {
             for(int i = 0; i < gt->wsetsize; i++) {
                 if(part(gt->wset[i]) == PART) {
@@ -217,6 +219,10 @@ public:
 
 class Lock {
 public:
+
+    Lock() {
+        owner = NULL;
+    }
 
     void lock(Txn *t) {
         if(owner == NULL) {
@@ -395,7 +401,7 @@ int main(int argc, char **argv) {
     GenericTxn *t = NULL;
     while(true) {
 
-        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY
+        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
         if (j > 1) {
             map<KEY, VAL> newtxn;
             newtxn[0] = j - 1;
@@ -403,8 +409,7 @@ int main(int argc, char **argv) {
             incomingdbtxns.enqueue(newtxn);
         }
         t = generate(j++, 10);
-//        t->toString();
-        incomingtxns.enqueue(t); */
+        incomingtxns.enqueue(*t);
         
         if(DEBUG) {
             // input collection from stdin
