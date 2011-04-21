@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <fstream>
 #include <map>
 #include "../circularbuffer.h"
 #include "../loadgen/loadgen.h"
@@ -24,6 +25,8 @@ using namespace std;
 class Txn;
 class Lock;
 
+ofstream log;
+    
 int PART;
 map<int, Txn *> txns;
 map<KEY, Lock *> locks;
@@ -39,6 +42,10 @@ Configuration *config;
 RemoteConnection *connection;
 
 void ginits(int node_id, char *config_file) {
+    log.open("../lm/lm.log");                        // Temp log file 
+    if (!log.is_open())
+        throw "Unable to write to log";
+    
     setlinebuf(stdout);
     setlinebuf(stderr);
     std::ios::sync_with_stdio();
@@ -108,7 +115,6 @@ public:
         lockwaits = 0;
         totalmessages = 0;
         
-        cout << mp << endl;
         if(mp) {
             for(int i = 0; i < gt->wsetsize; i++) {
                 if(part(gt->wset[i]) == PART) {
@@ -137,22 +143,33 @@ public:
     void run() {
         switch(txntype) {
             case NO_ID:
-                if (mp)
+                if (mp) {
                     cout << "NOR ";                     // Perform read (mp)
-                else
+                    log << "NOR ";
+                } else {
                     cout << "NO ";                      // Perform write (sp)
+                    log << "NO ";
+                }
                     
                 cout << txnid << " " << argcount << " ";
-                for (int i = 0; i < argcount; i++)      // Print out all info
+                log << txnid << " " << argcount << " ";
+                for (int i = 0; i < argcount; i++) {    // Print out all info
                     cout << args[i] << " ";             //      and args
+                    log << args[i] << " ";
+                }
                 cout << endl;
+                log << endl;
                 break;
                     
             case PAY_ID:
                 cout << "PAY " << txnid << " " << argcount << " ";
-                for (int i = 0; i < argcount; i++)      // Print out all info
+                log << "PAY " << txnid << " " << argcount << " ";
+                for (int i = 0; i < argcount; i++) {    // Print out all info
                     cout << args[i] << " ";             //      and args
+                    log << args[i] << " ";             //      and args
+                }
                 cout << endl;
+                log << endl;
                 break;
                 
             
@@ -172,9 +189,13 @@ public:
             case NO_ID:
                 if (mp && reads[0])                     // Successful reads (mp)
                     cout << "NO " << txnid << " " << argcount << " ";
-                    for (int i = 0; i < argcount; i++)  // Print out all info
+                    log << "NO " << txnid << " " << argcount << " ";
+                    for (int i = 0; i < argcount; i++) {// Print out all info
                         cout << args[i] << " ";         //      and args
+                        log << args[i] << " ";
+                    }
                     cout << endl;
+                    log << endl;
                 break;                                  // Finish with new order
                    
             case PAY_ID:
@@ -326,6 +347,7 @@ void processCompletedTxn(Txn *t) {
             }
         }
         
+        log << "COMPLETED TXN " << t->txnid;
         txns.erase(t->txnid);
         delete t;
 
@@ -397,17 +419,19 @@ int main(int argc, char **argv) {
 
     PART = atoi(argv[1]);
     
+    log << "PROGRAM STARTED" << endl << flush;
+    
     int j = 1;
     GenericTxn *t = NULL;
     while(true) {
 
-        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
+        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY
         if (j > 1) {
             map<KEY, VAL> newtxn;
             newtxn[0] = j - 1;
             newtxn[1] = 1;
             incomingdbtxns.enqueue(newtxn);
-        }
+        }*/
         t = generate(j++, 10);
         incomingtxns.enqueue(*t);
         

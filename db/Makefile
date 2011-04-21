@@ -7,8 +7,12 @@ CFLAGS =  -g3 -Wno-deprecated -lpthread -lm
 SRCS = tpc_c.cc new_order.cc payment.cc ../loadgen/loadgen.cc ../remote.cc ../config.cc ../freeport_config.cc
 OBJS = $(SRCS:.cc=.o)
 
-all: $(PROG)
+all: $(PROG) backend
 
+# Make the backend
+backend: backend.cc
+	$(CXX) $(CFLAGS) backend.cc -o backend
+	
 # Create objects from .cc files
 %.o: %.cc
 	$(CXX) $(CFLAGS) -o $@ -c $<

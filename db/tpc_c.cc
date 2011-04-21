@@ -26,6 +26,8 @@ QuickMap< DBIndex<Key> >   c_last_index(C_TABLE_ID, MAXC);
 Configuration *config;                          // Used in communicating
 RemoteConnection *connection;                   //  w/mediator for 2nd lookup
 
+ofstream log;
+
 /* <---------------------- BEGIN RAND FUNCS -----------------------> */
 
 void fill_with_random(int start, int length, char *string) {
@@ -208,8 +210,13 @@ int main(int argc, char *argv[]) {
         Part = 0;
     } else Part = atoi(argv[2]);
     
-//    cout << "Initializing benchmarks, please wait..." << endl;
+    log.open("db.log");                         // Temp log file 
+    if (!log.is_open())
+        throw "Unable to write to log";
+    log << "PROGRAM STARTED" << endl << flush;
+    
     tpccinit();                                 // Initialize databases
+    
     config = new Configuration(Part, argv[1]);
     connection = RemoteConnection::GetInstance(*config);
     /*cout << "INITIALIZED!" << endl;
@@ -277,6 +284,8 @@ int main(int argc, char *argv[]) {
             cout << id << " " << payment(args) << endl; 
         }
     }
+    
+    log << "COMPLETED TXN " << id << endl << flush;
     
     /*                      FREE ALL MEMORY                     */
     delete &w_table;

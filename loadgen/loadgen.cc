@@ -16,8 +16,6 @@ int Transaction;
 int NumWarehouses;
 
 GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
-    srand( time(NULL) );                                // Seed the rand()
-    
     int ol_cnt, wsize, rsize, asize;                    // Orderline count
     ol_cnt = 5 + rand() % 10;                           //      5 - 15
     
@@ -151,7 +149,6 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
 }
 
 GenericTxn *generate(int id, int w_ids) {
-    srand( time(NULL) );                                // Seed random
     double x = RANF();                                  // Pick random #
     
     Transaction = id;
