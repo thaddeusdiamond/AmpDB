@@ -19,6 +19,8 @@
 
 #include "../config.h"
 
+#define MAX_RUN_SECOND 10
+
 using std::map;
 using std::vector;
 
@@ -397,6 +399,17 @@ void Kill(const ClusterConfiguration& config, char* argv[], bool client_int){
     }
 }
 
+void SpawnKiller(){
+    int pid = fork();
+    if(pid < -1)
+        printf("Fork failed: no killer\n");
+    else if(pid == 0){
+        sleep(MAX_RUN_SECOND);
+        kill(getppid(), SIGINT);
+        exit(0);
+    }
+}
+
 void TerminatingChildren(int sig);
 
 void Deploy(const ClusterConfiguration& config, char* argv[]){
@@ -447,6 +460,7 @@ void Deploy(const ClusterConfiguration& config, char* argv[]){
     signal(SIGTERM, &TerminatingChildren);
     signal(SIGPIPE, &TerminatingChildren);
 
+    SpawnKiller();
     int num_fd = ChildernPipes.size();
     int max_fd = 0;
     fd_set readset, fds;

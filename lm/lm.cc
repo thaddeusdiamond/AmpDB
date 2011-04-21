@@ -37,6 +37,9 @@ DEQUE<Message> incomingmsgs;
 DEQUE<Message> oldmessages;
 DEQUE<GenericTxn> incomingtxns;
 DEQUE< map<KEY, VAL> > incomingdbtxns;
+DEQUE<Txn> outgoingdbtxns;
+
+pthread_mutex_t olatch, ilatch;
 
 Configuration *config;
 RemoteConnection *connection;
@@ -52,6 +55,8 @@ void ginits(int node_id, char *config_file) {
     config = new Configuration(node_id, config_file);
     connection = RemoteConnection::GetInstance(*config);
     srand(0);
+    pthread_mutex_init(&olatch);
+    pthread_mutex_init(&ilatch);
 }
 
 
@@ -143,23 +148,32 @@ public:
     void run() {
         switch(txntype) {
             case NO_ID:
-                if (mp) {
-                    cout << "NOR ";                     // Perform read (mp)
-                    log << "NOR ";
-                } else {
-                    cout << "NO ";                      // Perform write (sp)
-                    log << "NO ";
-                }
-                    
-                cout << txnid << " " << argcount << " ";
-                log << txnid << " " << argcount << " ";
-                for (int i = 0; i < argcount; i++) {    // Print out all info
-                    cout << args[i] << " ";             //      and args
-                    log << args[i] << " ";
-                }
-                cout << endl;
-                log << endl;
+            
+                // only implemented for single-partition NO txns
+                // (i.e. run2 doesn't do anything) so far
+                pthread_mutex_lock(&olatch);
+                outgoingdbtxns.enqueue(this);
+                pthread_mutex_unlock(&olatch);
+            
                 break;
+            
+//                if (mp) {
+//                    cout << "NOR ";                     // Perform read (mp)
+//                    log << "NOR ";
+//                } else {
+//                    cout << "NO ";                      // Perform write (sp)
+//                    log << "NO ";
+//                }
+//                    
+//                cout << txnid << " " << argcount << " ";
+//                log << txnid << " " << argcount << " ";
+//                for (int i = 0; i < argcount; i++) {    // Print out all info
+//                    cout << args[i] << " ";             //      and args
+//                    log << args[i] << " ";
+//                }
+//                cout << endl;
+//                log << endl;
+//                break;
                     
             case PAY_ID:
                 cout << "PAY " << txnid << " " << argcount << " ";
@@ -390,6 +404,7 @@ void processCompletedTxn(Txn *t) {
     }
 }
 
+// don't need to use this function if tpcc backend is running in pthread
 void fillIncomingDBTxns() {
     map<KEY, VAL> newtxn;                           // Generic new txn
     KEY i, read_in;
@@ -412,6 +427,19 @@ void fillIncomingDBTxns() {
         } else
             break;
     }
+}
+
+void *runtpcc(void *args) {
+    // Thad: call tpc_c.cc main function from here, e.g.:
+    //
+    //      pthread_t tpccthread;
+    //      pthread_create(tpccthread, NULL, args, NULL);
+    //
+    // use incomingdbtxns and outgoingdbtxns to communicate between, e.g. (example taken from line 154 above)
+    //
+    //      pthread_mutex_lock(&olatch);
+    //      outgoingdbtxns.enqueue(this);
+    //      pthread_mutex_unlock(&olatch);
 }
 
 int main(int argc, char **argv) {
@@ -455,12 +483,17 @@ int main(int argc, char **argv) {
             processNewTxn(incomingtxns.dequeue());
         }
 
+        
+        pthread_mutex_lock(&ilatch);
         while(incomingdbtxns.size()) {
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
+            pthread_mutex_lock(&ilatch);
             Txn *t = txns[dbtxn[0]];                // Txn id
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
+            pthread_mutex_lock(&ilatch);
         }
+        pthread_mutex_unlock(&ilatch);
 
     }
     return 0;
