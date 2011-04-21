@@ -619,7 +619,7 @@ void RemoteConnection::FillIncomingMessages(CircularBuffer<Message>* msgs){
 
     if(actions == 0)
         return;
-    if(FD_ISSET(_server_sock_msgs, &readset)){
+    if(_server_sock_msgs >= 0 && FD_ISSET(_server_sock_msgs, &readset)){
         AcceptingConnection(_server_sock_msgs);
 
         if(--actions == 0)

@@ -1,12 +1,11 @@
 #include <cstdio>
 
-#include <deque>
-
 #include "../config.h"
 #include "../remote.h"
 #include "../generictxn.h"
 #include "../global.h"
 #include "../message.h"
+#include "../circularbuffer.h"
 
 // #define VERBOSE 1
 
@@ -16,11 +15,9 @@
 #define REDUCE_NETWORK_TRAFFIC if(0) ; else
 #endif
 
-using std::deque;
-
 void DumpTxn(const GenericTxn& txn, const Configuration& config){
     printf("|- ID %ld; orig %ld\n", txn.txnid, txn.txnid_unordered);
-    printf("|- from %ld; type %ld; iso %d\n",
+    printf("|- from %ld; type %d; iso %d\n",
            txn.source_mediator, txn.txntype, txn.isolationlevel);
     printf("|- rsetsize %ld; wsetsize %ld; argcount %ld\n",
            txn.rsetsize, txn.wsetsize, txn.argcount);
@@ -93,7 +90,7 @@ int main(int argc, char* argv[]){
     Configuration config(atoi(argv[2]), argv[1]);
     RemoteConnection* remote = RemoteConnection::GetInstance(config);
     while(1){
-        deque<GenericTxn> txns;
+        CircularBuffer<GenericTxn> txns;
         remote->FillIncomingTxns(&txns, -1);
 #if VERBOSE
             if(++count % 100 == 0){
@@ -101,7 +98,7 @@ int main(int argc, char* argv[]){
             }
 #endif
         if(txns.size() > 0){
-            for(deque<GenericTxn>::const_iterator it = txns.begin();
+            for(CircularBuffer<GenericTxn>::iterator it = txns.begin();
                 it != txns.end(); ++it)
                 REDUCE_NETWORK_TRAFFIC{
                     // DumpTxn(*it, config);

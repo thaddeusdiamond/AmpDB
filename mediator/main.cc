@@ -12,6 +12,7 @@ int main(int argc, char* argv[]){
 
     setlinebuf(stdout);
     setlinebuf(stderr);
+    srand(time(NULL));
     Configuration config(atoi(argv[2]), argv[1]);
     Mediator::MediatorServer server(config);
     if(config.allnodes[config.myNodeID]->nodeType != MEDIATOR_NODE){
