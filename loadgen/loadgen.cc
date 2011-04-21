@@ -90,7 +90,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             break;
         
         case PAY_ID:
-            rsize = 0;  wsize = 3;  asize = 6;          // Read & write set
+            rsize = 0;  wsize = 3;  asize = 7;          // Read & write set
             rset_index = 8;
             wset_index = rset_index + rsize; 
             argc_index = wset_index + wsize;
@@ -119,13 +119,16 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             c_id = c | (part << 48) | (C_TABLE_ID << 32);
             
             /*                  Set write set and arg list              */
-            txn_buffer[wset_index++] = txn_buffer[argc_index++] = w_id; 
-            txn_buffer[wset_index++] = txn_buffer[argc_index++] = d_id;
+            txn_buffer[wset_index++] = w_id;
+            txn_buffer[argc_index++] = w_id; 
+            txn_buffer[wset_index++] = d_id;
+            txn_buffer[argc_index++] = d_id;
             txn_buffer[argc_index++] = (Key) h_amount;
             txn_buffer[argc_index++] = (Key) h_date;
             txn_buffer[argc_index++] = (Key) last;
-            txn_buffer[wset_index++] = txn_buffer[argc_index++] = -1;
-            txn_buffer[wset_index++] = txn_buffer[argc_index++] = c_id;
+            txn_buffer[argc_index++] = -1;
+            txn_buffer[wset_index++] = c_id;
+            txn_buffer[argc_index++] = c_id;
             
             break;
         

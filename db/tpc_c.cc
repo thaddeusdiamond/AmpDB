@@ -201,21 +201,20 @@ void createitem(Key i_id) {
 
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
+    if (argc < 3) {
         cerr << "Usage: " << argv[0] << " [CONFIG FILE] [PARTITION #] " << endl;
         //return false;                           // Illegal # args
         cerr << "Unspecified partition; assuming 0." << endl;
         Part = 0;
-    }
-    else Part = atoi(argv[2]);
+    } else Part = atoi(argv[2]);
     
 //    cout << "Initializing benchmarks, please wait..." << endl;
     tpccinit();                                 // Initialize databases
     config = new Configuration(Part, argv[1]);
     connection = RemoteConnection::GetInstance(*config);
-//    cout << "INITIALIZED!" << endl;
+    /*cout << "INITIALIZED!" << endl;
     
-    /*<---------------  BENCHMARKING TPC-C BY ITSELF  ------------->
+    <---------------  BENCHMARKING TPC-C BY ITSELF  ------------->
     int j, sum, low, high;
     GenericTxn *t;
     sum = low = high = 0;
@@ -236,14 +235,14 @@ int main(int argc, char *argv[]) {
         if (j > high)
             high = j;
     }
-    /*                      PRINT RESULTS                          
+    /*                      PRINT RESULTS                           
     cout << "Average over 200 iterations: " << (sum / 200.0) << endl;
     cout << "LOW: " << low << endl << "HIGH: " << high << endl;
     
     /*<-------------------  END BENCHMARK  ------------------------>
     
     cout << "Please enter transaction arguments now:" << endl;*/
-    
+     
     int argcount;                               // # args, type of txn, id
     string type;
     Key id;      

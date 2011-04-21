@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <map>
 #include "../circularbuffer.h"
+#include "../loadgen/loadgen.h"
 #include "../global.h"
 #include "../remote.h"
 #include "../generictxn.h"
@@ -86,9 +87,28 @@ class Txn : public GenericTxn {
 public:
     
     Txn(GenericTxn *gt) {
+        txnid = gt->txnid;
+        txnid_unordered = gt->txnid_unordered;
+        source_mediator = gt->source_mediator;
+        txntype = gt->txntype;
+        isolationlevel = gt->isolationlevel;
+        mp = gt->mp;
+        
+        rsetsize = gt->rsetsize;
+        for (int i = 0; i < rsetsize; i++)
+            rset[i] = gt->rset[i];
+        wsetsize = gt->wsetsize;
+        for (int i = 0; i < wsetsize; i++)
+            wset[i] = gt->wset[i];
+        argcount = gt->argcount;
+        for (int i = 0; i < argcount; i++)
+            args[i] = gt->args[i];
+        
         readphasedone = false;
         lockwaits = 0;
         totalmessages = 0;
+        
+        cout << mp << endl;
         if(mp) {
             for(int i = 0; i < gt->wsetsize; i++) {
                 if(part(gt->wset[i]) == PART) {
@@ -123,14 +143,16 @@ public:
                     cout << "NO ";                      // Perform write (sp)
                     
                 cout << txnid << " " << argcount << " ";
-                for (int i = 0; i < 6; i++)             // Print out all info
+                for (int i = 0; i < argcount; i++)      // Print out all info
                     cout << args[i] << " ";             //      and args
+                cout << endl;
                 break;
                     
             case PAY_ID:
                 cout << "PAY " << txnid << " " << argcount << " ";
-                for (int i = 0; i < 6; i++)             // Print out all info
+                for (int i = 0; i < argcount; i++)      // Print out all info
                     cout << args[i] << " ";             //      and args
+                cout << endl;
                 break;
                 
             
@@ -150,21 +172,12 @@ public:
             case NO_ID:
                 if (mp && reads[0])                     // Successful reads (mp)
                     cout << "NO " << txnid << " " << argcount << " ";
-                    for (int i = 0; i < 6; i++)         // Print out all info
+                    for (int i = 0; i < argcount; i++)  // Print out all info
                         cout << args[i] << " ";         //      and args
-                        
+                    cout << endl;
                 break;                                  // Finish with new order
                    
             case PAY_ID:
-                /*  ALEX:  I think we should put something in here
-                           about what happens when the secondary
-                           key-ing is necessary and gets sent back to the
-                           mediator.  A message (it would then seem), is
-                           also sent to the lock manager saying we returned
-                           false, no?  Maybe I'm confused as to how 
-                           sendMediator(...) works
-                           
-                                            -- Thad */
                 break;
             
             case OS_ID:
@@ -206,6 +219,10 @@ public:
 
 class Lock {
 public:
+
+    Lock() {
+        owner = NULL;
+    }
 
     void lock(Txn *t) {
         if(owner == NULL) {
@@ -380,8 +397,20 @@ int main(int argc, char **argv) {
 
     PART = atoi(argv[1]);
     
+    int j = 1;
+    GenericTxn *t = NULL;
     while(true) {
 
+        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
+        if (j > 1) {
+            map<KEY, VAL> newtxn;
+            newtxn[0] = j - 1;
+            newtxn[1] = 1;
+            incomingdbtxns.enqueue(newtxn);
+        }
+        t = generate(j++, 10);
+        incomingtxns.enqueue(*t);
+        
         if(DEBUG) {
             // input collection from stdin
 
