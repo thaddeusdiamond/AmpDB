@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <map>
 #include "../circularbuffer.h"
+#include "../loadgen/loadgen.h"
 #include "../global.h"
 #include "../remote.h"
 #include "../generictxn.h"
@@ -86,6 +87,13 @@ class Txn : public GenericTxn {
 public:
     
     Txn(GenericTxn *gt) {
+        txnid = gt->txnid;
+        txnid_unordered = gt->txnid_unordered;
+        source_mediator = gt->source_mediator;
+        txntype = gt->txntype;
+        isolationlevel = gt->isolationlevel;
+        mp = gt->mp;
+
         readphasedone = false;
         lockwaits = 0;
         totalmessages = 0;
@@ -125,12 +133,14 @@ public:
                 cout << txnid << " " << argcount << " ";
                 for (int i = 0; i < 6; i++)             // Print out all info
                     cout << args[i] << " ";             //      and args
+                cout << endl;
                 break;
                     
             case PAY_ID:
                 cout << "PAY " << txnid << " " << argcount << " ";
                 for (int i = 0; i < 6; i++)             // Print out all info
                     cout << args[i] << " ";             //      and args
+                cout << endl;
                 break;
                 
             
@@ -152,7 +162,7 @@ public:
                     cout << "NO " << txnid << " " << argcount << " ";
                     for (int i = 0; i < 6; i++)         // Print out all info
                         cout << args[i] << " ";         //      and args
-                        
+                    cout << endl;
                 break;                                  // Finish with new order
                    
             case PAY_ID:
@@ -380,8 +390,12 @@ int main(int argc, char **argv) {
 
     PART = atoi(argv[1]);
     
+    int j = 1;
     while(true) {
 
+        GenericTxn *t = generate(j++, 10);
+        incomingtxns.enqueue(t);
+        
         if(DEBUG) {
             // input collection from stdin
 

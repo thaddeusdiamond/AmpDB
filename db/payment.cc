@@ -41,9 +41,8 @@ Key payment(Key *args) {
         
     /*                 Warehouse Processed Through Was Local            */
     if (warehouse_local(w_id)) { 
-        //cout << w_id << endl;
-        //Warehouse w = w_table[w_id];            // Perform reads from the
-        //w.w_ytd += h_amount;                    //      databases, then write
+        Warehouse w = w_table[w_id];            // Perform reads from the
+        w.w_ytd += h_amount;                    //      databases, then write
         District  d = d_table[d_id];
         d.d_ytd += h_amount;
     }
@@ -54,7 +53,7 @@ Key payment(Key *args) {
         if (c_id != prev_c_id) {            // SEND BACK TO MEDIATOR
             args[5] = c_id;          
             connection->SendMediator(Part, args, (size_t) 7);
-            return false;                   // ???? SHOULD I DO THIS ????
+            return false;
         }
     } else                                  // PRIMARY KEY LOOKUP
         c_id = args[6];
