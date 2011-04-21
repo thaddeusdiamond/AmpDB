@@ -92,7 +92,7 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
             break;
         
         case PAY_ID:
-            rsize = 0;  wsize = 3;  asize = 6;          // Read & write set
+            rsize = 0;  wsize = 3;  asize = 7;          // Read & write set
             rset_index = 8;
             wset_index = rset_index + rsize; 
             argc_index = wset_index + wsize;
