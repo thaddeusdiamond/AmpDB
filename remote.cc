@@ -453,7 +453,7 @@ void RemoteConnection::FillIncomingTxns(
 
     timeval timeout = {
         /* tv_sec */  wait_msec / 1000000,
-        /* tv_usec */ wait_msec % 1000000 * 1000
+        /* tv_usec */ wait_msec % 1000000
     };
     timeval* timeout_p = &timeout;
     if(wait_msec < 0)
