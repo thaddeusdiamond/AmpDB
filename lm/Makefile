@@ -3,7 +3,7 @@ PROG=lm
 CXXFLAGS=-g -O2 -Wno-deprecated -Wall
 LDFLAGS=
 
-SRCS=lm.cc ../remote.cc ../config.cc ../nonblock.cc ../loadgen/loadgen.cc
+SRCS=../db/tpc_c.cc ../db/new_order.cc ../db/payment.cc lm.cc ../remote.cc ../config.cc ../nonblock.cc ../loadgen/loadgen.cc
 OBJS=$(SRCS:.cc=.o)
 
 all: $(PROG)

@@ -55,8 +55,8 @@ void ginits(int node_id, char *config_file) {
     config = new Configuration(node_id, config_file);
     connection = RemoteConnection::GetInstance(*config);
     srand(0);
-    pthread_mutex_init(&olatch);
-    pthread_mutex_init(&ilatch);
+    pthread_mutex_init(&olatch, NULL);
+    pthread_mutex_init(&ilatch, NULL);
 }
 
 
@@ -148,51 +148,27 @@ public:
     void run() {
         switch(txntype) {
             case NO_ID:
-            
-                // only implemented for single-partition NO txns
-                // (i.e. run2 doesn't do anything) so far
-                pthread_mutex_lock(&olatch);
-                outgoingdbtxns.enqueue(this);
-                pthread_mutex_unlock(&olatch);
-            
-                break;
-            
-//                if (mp) {
-//                    cout << "NOR ";                     // Perform read (mp)
-//                    log << "NOR ";
-//                } else {
-//                    cout << "NO ";                      // Perform write (sp)
-//                    log << "NO ";
-//                }
-//                    
-//                cout << txnid << " " << argcount << " ";
-//                log << txnid << " " << argcount << " ";
-//                for (int i = 0; i < argcount; i++) {    // Print out all info
-//                    cout << args[i] << " ";             //      and args
-//                    log << args[i] << " ";
-//                }
-//                cout << endl;
-//                log << endl;
-//                break;
-                    
-            case PAY_ID:
-                cout << "PAY " << txnid << " " << argcount << " ";
-                log << "PAY " << txnid << " " << argcount << " ";
-                for (int i = 0; i < argcount; i++) {    // Print out all info
-                    cout << args[i] << " ";             //      and args
-                    log << args[i] << " ";             //      and args
-                }
-                cout << endl;
-                log << endl;
+                if (mp)
+                    type = "NOR";
+                else
+                    type = "NO";
                 break;
                 
+            case PAY_ID:
+                type = "PAY";
+                break;
             
             case OS_ID:
             case DEL_ID:
             case SL_ID:
+                return;
                 break;
-            
         }
+        
+        pthread_mutex_lock(&olatch);
+        outgoingdbtxns.enqueue(this);
+        pthread_mutex_unlock(&olatch);
+        
     }
     
 
@@ -201,25 +177,21 @@ public:
     void run2() {
         switch(txntype) {
             case NO_ID:
-                if (mp && reads[0])                     // Successful reads (mp)
-                    cout << "NO " << txnid << " " << argcount << " ";
-                    log << "NO " << txnid << " " << argcount << " ";
-                    for (int i = 0; i < argcount; i++) {// Print out all info
-                        cout << args[i] << " ";         //      and args
-                        log << args[i] << " ";
-                    }
-                    cout << endl;
-                    log << endl;
-                break;                                  // Finish with new order
-                   
-            case PAY_ID:
+                if (mp && reads[0])
+                    type = "NO"
                 break;
-            
+                
             case OS_ID:
             case DEL_ID:
             case SL_ID:
-                break;                                  // Do nothing for pay (no mp)
+            case PAY_ID:
+                return;
+                break;
         }
+        
+        pthread_mutex_lock(&olatch);
+        outgoingdbtxns.enqueue(this);
+        pthread_mutex_unlock(&olatch);
     }
 
 
@@ -245,7 +217,8 @@ public:
     int lockwaits;          // number of lock acquisitions on which txn is currently blocked
     int messagewaits;       // number of messages still waiting to be received before txn can complete
     bool readphasedone;     // set to true after read phase is complete for multipartition txns
-    map<KEY,VAL> reads; // local copy of data state; initially empty
+    map<KEY,VAL> reads;     // local copy of data state; initially empty
+    string type;            // Type of operation to send to DB
 
 };
 
@@ -429,11 +402,12 @@ void fillIncomingDBTxns() {
     }
 }
 
-void *runtpcc(void *args) {
+void runtpcc() {
     // Thad: call tpc_c.cc main function from here, e.g.:
     //
-    //      pthread_t tpccthread;
-    //      pthread_create(tpccthread, NULL, args, NULL);
+          
+          pthread_t tpccthread;
+          pthread_create(&tpccthread, NULL, &tpcc_thread, (void *)PART);
     //
     // use incomingdbtxns and outgoingdbtxns to communicate between, e.g. (example taken from line 154 above)
     //
@@ -448,6 +422,7 @@ int main(int argc, char **argv) {
     PART = atoi(argv[1]);
     
     log << "PROGRAM STARTED" << endl << flush;
+    runtpcc();
     
     int j = 1;
     GenericTxn *t = NULL;
@@ -496,7 +471,9 @@ int main(int argc, char **argv) {
         pthread_mutex_unlock(&ilatch);
 
     }
-    return 0;
+    
+    free_database();
+    exit(EXIT_FAILURE);                         // DB Server Interrupt
 }
 
 
