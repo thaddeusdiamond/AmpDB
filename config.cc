@@ -25,7 +25,7 @@ Configuration::Configuration(int node_id, const string& filename)
 }
 
 int Configuration::partitionContainingRecord(int64_t x) const{
-    return x % dbpartitions.size();
+    return (((uint64_t)x) >> 48) % dbpartitions.size();
 }
 
 int Configuration::ReadFromFile(const string& filename){
