@@ -1,0 +1,8 @@
+*.o
+db/TPC-C
+libzmq.a
+lm/lm
+mediator/mediator
+preprocessor/preproc
+utils/cluster
+utils/dummy-db
