@@ -27,7 +27,7 @@ extern Configuration *config;                   // Used in communicating
 extern RemoteConnection *connection;            //  w/mediator for 2nd lookup
 extern class Txn;
 extern DEQUE<Txn> outgoingdbtxns;
-
+extern DEQUE< map<KEY, VAL> > incomingdbtxns;
 
 extern ofstream log;
 
@@ -229,8 +229,13 @@ void tpcc_thread(void *part) {
     
     while (true) {
         while (outgoingdbtxns.size()) {
+            map<KEY, VAL> newtxn;               // Generic new txn
             Txn *t = outgoingdbtxns.dequeue();
-            perform_query(t->type, t->txnid, t->args);
+            
+            newtxn[0] = t->txnid;               // Make a new map
+            newtxn[1] = perform_query(t->type, t->txnid, t->args);
+            
+            incomingdbtxns.enqueue(newtxn);     // Enqueue onto thread-safe
         }
     }
 }

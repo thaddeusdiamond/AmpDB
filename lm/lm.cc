@@ -445,7 +445,7 @@ int main(int argc, char **argv) {
             // non-blocking input collection
             connection->FillIncomingMessages(&incomingmsgs);
             connection->FillIncomingTxns(&incomingtxns);
-            fillIncomingDBTxns();
+//            fillIncomingDBTxns();
         }
 
         while(incomingmsgs.size()) {
