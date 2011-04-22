@@ -16,10 +16,10 @@
 /* <---------------------- BEGIN TPC GLOBAL -----------------------> */
 
 /////    TRANSACTION PERCENTAGES    /////
-#define NO_PER   0.57//0.45
-#define NO_INV   0.01
-#define NO_MP    0.01
-#define PAY_PER  0.43
+#define NO_PER   1.0 //0.57//0.45
+#define NO_INV   0 //0.01
+#define NO_MP    0 //0.01
+#define PAY_PER  0 //0.43
 #define PAY_MP   0.15
 #define PAY_LAST 0.6
 #define OS_PER   0//0.04

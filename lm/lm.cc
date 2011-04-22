@@ -29,11 +29,16 @@ map<int, Txn *> txns;
 map<KEY, Lock *> locks;
 DEQUE<Txn *> readytxns;
 int partitionid;
+pthread_t tpccthread;
+
 
 DEQUE<Message> incomingmsgs;
 DEQUE<Message> oldmessages;
 DEQUE<GenericTxn> incomingtxns;
 DEQUE< map<KEY, VAL> > incomingdbtxns;
+DEQUE<GenericTxn *> outgoingdbtxns;
+
+pthread_mutex_t olatch, ilatch;
 
 Configuration *config;
 RemoteConnection *connection;
@@ -45,6 +50,8 @@ void ginits(int node_id, char *config_file) {
     config = new Configuration(node_id, config_file);
     connection = RemoteConnection::GetInstance(*config);
     srand(0);
+    pthread_mutex_init(&olatch, NULL);
+    pthread_mutex_init(&ilatch, NULL);
 }
 
 
@@ -108,7 +115,6 @@ public:
         lockwaits = 0;
         totalmessages = 0;
         
-        cout << mp << endl;
         if(mp) {
             for(int i = 0; i < gt->wsetsize; i++) {
                 if(part(gt->wset[i]) == PART) {
@@ -135,33 +141,31 @@ public:
     // is ready to be sent to the storage layer for execution. run sends a command
     // to the storage layer starting the appropriate stored procedure running with the args supplied
     void run() {
+//        cout << "RUNNING TXN: " << txnid;
         switch(txntype) {
             case NO_ID:
                 if (mp)
-                    cout << "NOR ";                     // Perform read (mp)
+                    type = "NOR";
                 else
-                    cout << "NO ";                      // Perform write (sp)
-                    
-                cout << txnid << " " << argcount << " ";
-                for (int i = 0; i < argcount; i++)      // Print out all info
-                    cout << args[i] << " ";             //      and args
-                cout << endl;
-                break;
-                    
-            case PAY_ID:
-                cout << "PAY " << txnid << " " << argcount << " ";
-                for (int i = 0; i < argcount; i++)      // Print out all info
-                    cout << args[i] << " ";             //      and args
-                cout << endl;
+                    type = "NO";
                 break;
                 
+            case PAY_ID:
+                type = "PAY";
+                break;
             
             case OS_ID:
             case DEL_ID:
             case SL_ID:
+                return;
                 break;
-            
         }
+        
+//        cout << "\tTYPE: " << type << endl;
+        pthread_mutex_lock(&olatch);
+        outgoingdbtxns.enqueue(this);
+        pthread_mutex_unlock(&olatch);
+        
     }
     
 
@@ -170,21 +174,21 @@ public:
     void run2() {
         switch(txntype) {
             case NO_ID:
-                if (mp && reads[0])                     // Successful reads (mp)
-                    cout << "NO " << txnid << " " << argcount << " ";
-                    for (int i = 0; i < argcount; i++)  // Print out all info
-                        cout << args[i] << " ";         //      and args
-                    cout << endl;
-                break;                                  // Finish with new order
-                   
-            case PAY_ID:
+                if (mp && reads[0])
+                    type = "NO";
                 break;
-            
+                
             case OS_ID:
             case DEL_ID:
             case SL_ID:
-                break;                                  // Do nothing for pay (no mp)
+            case PAY_ID:
+                return;
+                break;
         }
+        
+        pthread_mutex_lock(&olatch);
+        outgoingdbtxns.enqueue(this);
+        pthread_mutex_unlock(&olatch);
     }
 
 
@@ -210,8 +214,8 @@ public:
     int lockwaits;          // number of lock acquisitions on which txn is currently blocked
     int messagewaits;       // number of messages still waiting to be received before txn can complete
     bool readphasedone;     // set to true after read phase is complete for multipartition txns
-    map<KEY,VAL> reads; // local copy of data state; initially empty
-
+    map<KEY,VAL> reads;     // local copy of data state; initially empty
+    
 };
 
 
@@ -280,7 +284,7 @@ void processNewTxn(GenericTxn gt) {
 //        }
 //    }
 
-        
+    
     // start txn
     if(t->lockwaits == 0)
         t->run();
@@ -392,22 +396,35 @@ void fillIncomingDBTxns() {
     }
 }
 
+
+
+void runtpcc() {
+    // Thad: call tpc_c.cc main function from here, e.g.:
+    //
+          
+          cout << "STARTED THREAD FOR DATABASE" << endl;
+          pthread_create(&tpccthread, NULL, &tpcc_thread, &PART);
+    //
+    // use incomingdbtxns and outgoingdbtxns to communicate between, e.g. (example taken from line 154 above)
+    //
+    //      pthread_mutex_lock(&olatch);
+    //      outgoingdbtxns.enqueue(this);
+    //      pthread_mutex_unlock(&olatch);
+}
+
 int main(int argc, char **argv) {
     ginits(atoi(argv[2]), argv[1]);
 
     PART = atoi(argv[1]);
+    
+    cout << "PROGRAM STARTED" << endl << flush;
+    runtpcc();
     
     int j = 1;
     GenericTxn *t = NULL;
     while(true) {
 
         /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
-        if (j > 1) {
-            map<KEY, VAL> newtxn;
-            newtxn[0] = j - 1;
-            newtxn[1] = 1;
-            incomingdbtxns.enqueue(newtxn);
-        }
         t = generate(j++, 10);
         incomingtxns.enqueue(*t);
         
@@ -418,7 +435,6 @@ int main(int argc, char **argv) {
             // non-blocking input collection
             connection->FillIncomingMessages(&incomingmsgs);
             connection->FillIncomingTxns(&incomingtxns);
-            fillIncomingDBTxns();
         }
 
         while(incomingmsgs.size()) {
@@ -432,14 +448,20 @@ int main(int argc, char **argv) {
         }
 
         while(incomingdbtxns.size()) {
+            pthread_mutex_lock(&ilatch);
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
+            pthread_mutex_unlock(&ilatch);
+            
             Txn *t = txns[dbtxn[0]];                // Txn id
+            cout << "NEW DB TXN INCOMING: " << dbtxn[0] << endl;
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
         }
 
     }
-    return 0;
+    
+    free_database();
+    exit(EXIT_FAILURE);                         // DB Server Interrupt
 }
 
 

@@ -23,8 +23,13 @@ QuickMap<History>    h_table(H_TABLE_ID, HISTORY);
 
 QuickMap< DBIndex<Key> >   c_last_index(C_TABLE_ID, MAXC);
 
-Configuration *config;                          // Used in communicating
-RemoteConnection *connection;                   //  w/mediator for 2nd lookup
+extern Configuration *config;                   // Used in communicating
+extern RemoteConnection *connection;            //  w/mediator for 2nd lookup
+extern DEQUE<GenericTxn *> outgoingdbtxns;
+extern DEQUE< map<Key, Val> > incomingdbtxns;
+
+extern ofstream log;
+extern pthread_mutex_t olatch, ilatch;
 
 /* <---------------------- BEGIN RAND FUNCS -----------------------> */
 
@@ -198,86 +203,56 @@ void createitem(Key i_id) {
     i_table[i_id] = i;
 }
 
-
-
-int main(int argc, char *argv[]) {
-    if (argc < 3) {
-        cerr << "Usage: " << argv[0] << " [CONFIG FILE] [PARTITION #] " << endl;
-        //return false;                           // Illegal # args
-        cerr << "Unspecified partition; assuming 0." << endl;
-        Part = 0;
-    } else Part = atoi(argv[2]);
-    
-//    cout << "Initializing benchmarks, please wait..." << endl;
-    tpccinit();                                 // Initialize databases
-    config = new Configuration(Part, argv[1]);
-    connection = RemoteConnection::GetInstance(*config);
-    /*cout << "INITIALIZED!" << endl;
-    
-    <---------------  BENCHMARKING TPC-C BY ITSELF  ------------->
-    int j, sum, low, high;
-    GenericTxn *t;
-    sum = low = high = 0;
-    for (int k = 0; k < 200; k++) {             // 200 Iterations
-        time_t cur_time = time(NULL) + 1;       // Current Time
-        for (j = 0; time(NULL) < cur_time; j++) {
-	        t = generate(j, 10);                // Generate rand txn
-	        if (t->txntype == NO_ID)
-    	        new_order(t->args, j);          //      NEW ORDER
-	        else
-	            payment(t->args);               //      PAYMENT
-	        delete t;
+int perform_query(string type, Key id, Key *args) {
+    /*     NEWORDER TXN:        READ PHASE                  */
+    if (!type.compare("NOR")) {
+        bool reads_okay = true;
+        for (int i = 20; i < 20 + args[3]; i++) {
+            if (!check_reads(args[i]))
+                reads_okay = false;         // One variable not okay
         }
-        cout << "ROUND " << k << ": " << j << " transactions" << endl;
-        sum += j;
-        if (!low || j < low)
-            low = j;
-        if (j > high)
-            high = j;
-    }
-    /*                      PRINT RESULTS                           
-    cout << "Average over 200 iterations: " << (sum / 200.0) << endl;
-    cout << "LOW: " << low << endl << "HIGH: " << high << endl;
+        return reads_okay;
     
-    /*<-------------------  END BENCHMARK  ------------------------>
-    
-    cout << "Please enter transaction arguments now:" << endl;*/
-     
-    int argcount;                               // # args, type of txn, id
-    string type;
-    Key id;      
-    
-    while (true) {        
-        cin >> type;                            // Read in variables
-        cin >> id;
-        cin >> argcount;
+    /*     NEWORDER TXN:        WRITE PHASE                 */
+    } else if (!type.compare("NO")) {
+        return new_order(args, id); 
 
-        Key args[argcount];                     // Static args array
-        for (int i = 0; i < argcount; i++)
-            cin >> args[i];
-        
-        /*     NEWORDER TXN:        READ PHASE                  */
-        if (!type.compare("NOR")) {
-            bool reads_okay = true;
-            for (int i = 20; i < 20 + args[3]; i++) {
-                if (!check_reads(args[i]))
-                    reads_okay = false;         // One variable not okay
-            }
-            cout << id << " " << reads_okay << endl;
-        
-        /*     NEWORDER TXN:        WRITE PHASE                 */
-        } else if (!type.compare("NO")) {
-            cout << id << " " << new_order(args, id) << endl; 
+    /*     PAYMENT TXN:         WRITE PHASE                 */
+    } else if (!type.compare("PAY")) {
+        return payment(args); 
+    }
+    return false;                           // WILL NEVER REACH
+}
+
+void *tpcc_thread(void *part) {
+    cout << "STARTED DB" << endl;
+    tpccinit();
+    Part = *((int *)part);                      // Set global partition
     
-        /*     PAYMENT TXN:         READ PHASE                  
-        } else if (!type.compare("PAYR")) {
-        
-        /*     PAYMENT TXN:         WRITE PHASE                 */
-        } else if (!type.compare("PAY")) {
-            cout << id << " " << payment(args) << endl; 
+    cout << "DATABASE INITIALIZED" << endl;        
+    while (true) {
+        while (outgoingdbtxns.size()) {
+            map<Key, Val> newtxn;               // Generic new txn
+            
+            pthread_mutex_lock(&olatch);
+            GenericTxn *t = outgoingdbtxns.dequeue();
+            pthread_mutex_unlock(&olatch);
+
+            cout << "IN DB FOR TXN " << t->txnid << endl;
+            
+            newtxn[0] = t->txnid;               // Make a new map
+            newtxn[1] = perform_query(t->type, t->txnid, t->args);
+            
+            pthread_mutex_lock(&ilatch);
+            incomingdbtxns.enqueue(newtxn);     // Enqueue onto thread-safe
+            pthread_mutex_unlock(&ilatch);
         }
     }
     
+    return NULL;
+}
+
+void free_database() {
     /*                      FREE ALL MEMORY                     */
     delete &w_table;
     delete &d_table;
@@ -289,6 +264,104 @@ int main(int argc, char *argv[]) {
     delete &i_table;
     delete &h_table;
     delete &c_last_index;
-    
-    exit(EXIT_FAILURE);                         // DB Server Interrupt
 }
+
+//int main(int argc, char *argv[]) {
+//    if (argc < 3) {
+//        cerr << "Usage: " << argv[0] << " [CONFIG FILE] [PARTITION #] " << endl;
+//        //return false;                           // Illegal # args
+//        cerr << "Unspecified partition; assuming 0." << endl;
+//        Part = 0;
+//    } else Part = atoi(argv[2]);
+//    
+//    log.open("db.log");                         // Temp log file 
+//    if (!log.is_open())
+//        throw "Unable to write to log";
+//    log << "PROGRAM STARTED" << endl << flush;
+//    
+//    tpccinit();                                 // Initialize databases
+//    
+//    /*config = new Configuration(Part, argv[1]);
+//    connection = RemoteConnection::GetInstance(*config);
+//    cout << "INITIALIZED!" << endl;
+//    
+//    <---------------  BENCHMARKING TPC-C BY ITSELF  ------------->
+//    int j, sum, low, high;
+//    GenericTxn *t;
+//    sum = low = high = 0;
+//    for (int k = 0; k < 200; k++) {             // 200 Iterations
+//        time_t cur_time = time(NULL) + 1;       // Current Time
+//        for (j = 0; time(NULL) < cur_time; j++) {
+//	        t = generate(j, 10);                // Generate rand txn
+//	        if (t->txntype == NO_ID)
+//    	        new_order(t->args, j);          //      NEW ORDER
+//	        else
+//	            payment(t->args);               //      PAYMENT
+//	        delete t;
+//        }
+//        cout << "ROUND " << k << ": " << j << " transactions" << endl;
+//        sum += j;
+//        if (!low || j < low)
+//            low = j;
+//        if (j > high)
+//            high = j;
+//    }
+//    /*                      PRINT RESULTS                           
+//    cout << "Average over 200 iterations: " << (sum / 200.0) << endl;
+//    cout << "LOW: " << low << endl << "HIGH: " << high << endl;
+//    
+//    /*<-------------------  END BENCHMARK  ------------------------>
+//    
+//    cout << "Please enter transaction arguments now:" << endl;*/
+//     
+//    int argcount;                               // # args, type of txn, id
+//    string type;
+//    Key id;      
+//    
+//    while (true) {        
+//        cin >> type;                            // Read in variables
+//        cin >> id;
+//        cin >> argcount;
+
+//        Key args[argcount];                     // Static args array
+//        for (int i = 0; i < argcount; i++)
+//            cin >> args[i];
+//        
+//        /*     NEWORDER TXN:        READ PHASE                  */
+//        if (!type.compare("NOR")) {
+//            bool reads_okay = true;
+//            for (int i = 20; i < 20 + args[3]; i++) {
+//                if (!check_reads(args[i]))
+//                    reads_okay = false;         // One variable not okay
+//            }
+//            cout << id << " " << reads_okay << endl;
+//        
+//        /*     NEWORDER TXN:        WRITE PHASE                 */
+//        } else if (!type.compare("NO")) {
+//            cout << id << " " << new_order(args, id) << endl; 
+//    
+//        /*     PAYMENT TXN:         READ PHASE                  
+//        } else if (!type.compare("PAYR")) {
+//        
+//        /*     PAYMENT TXN:         WRITE PHASE                 */
+//        } else if (!type.compare("PAY")) {
+//            cout << id << " " << payment(args) << endl; 
+//        }
+//    }
+//    
+//    log << "COMPLETED TXN " << id << endl << flush;
+//    
+//    /*                      FREE ALL MEMORY                     */
+//    delete &w_table;
+//    delete &d_table;
+//    delete &c_table;
+//    delete &no_table;
+//    delete &o_table;
+//    delete &ol_table;
+//    delete &s_table;
+//    delete &i_table;
+//    delete &h_table;
+//    delete &c_last_index;
+//    
+//    exit(EXIT_FAILURE);                         // DB Server Interrupt
+//}
