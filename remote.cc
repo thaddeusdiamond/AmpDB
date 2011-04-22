@@ -23,6 +23,7 @@
 #include "message.h"
 
 // #define STATIC_TXN_FILE "txn"
+// #define VERBOSE 1
 
 #if EXTRA_TXN
 #define REDUCE_NETWORK_TRAFFIC for(int i__ = 0; i__ <= EXTRA_TXN; ++i__)
@@ -363,7 +364,7 @@ void RemoteConnection::AcceptingConnection(int server_sock){
     }else{
         printf("Node registered on different address \"%s\"\n",
                node->host.c_str());
-        close(client_sock);
+        // close(client_sock);
     }
 }
 
@@ -586,6 +587,11 @@ void RemoteConnection::FillIncomingTxns(
             }
         } // myNodeType == DB_NODE
     }
+
+    /*for(CircularBuffer<GenericTxn>::iterator it = txns->begin();
+        it != txns->end(); ++it)
+        printf("txn => uid = %ld; id = %ld; om = %ld\n",
+               it->txnid_unordered, it->txnid, it->source_mediator);*/
 }
 
 void RemoteConnection::FillIncomingMessages(CircularBuffer<Message>* msgs){

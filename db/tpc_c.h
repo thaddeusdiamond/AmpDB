@@ -24,7 +24,6 @@
 #include <cstdio>
 #include <stdint.h>
 #include <iostream>
-#include <fstream>
 
 #define Deque CircularBuffer    // Data structure aliases
 #define Key int64_t

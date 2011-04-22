@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <fstream>
 #include <map>
 #include "../circularbuffer.h"
 #include "../loadgen/loadgen.h"
@@ -25,8 +24,6 @@ using namespace std;
 class Txn;
 class Lock;
 
-ofstream log;
-    
 int PART;
 map<int, Txn *> txns;
 map<KEY, Lock *> locks;
@@ -37,26 +34,17 @@ DEQUE<Message> incomingmsgs;
 DEQUE<Message> oldmessages;
 DEQUE<GenericTxn> incomingtxns;
 DEQUE< map<KEY, VAL> > incomingdbtxns;
-DEQUE<Txn> outgoingdbtxns;
-
-pthread_mutex_t olatch, ilatch;
 
 Configuration *config;
 RemoteConnection *connection;
 
 void ginits(int node_id, char *config_file) {
-    log.open("../lm/lm.log");                        // Temp log file 
-    if (!log.is_open())
-        throw "Unable to write to log";
-    
     setlinebuf(stdout);
     setlinebuf(stderr);
     std::ios::sync_with_stdio();
     config = new Configuration(node_id, config_file);
     connection = RemoteConnection::GetInstance(*config);
     srand(0);
-    pthread_mutex_init(&olatch);
-    pthread_mutex_init(&ilatch);
 }
 
 
@@ -120,6 +108,7 @@ public:
         lockwaits = 0;
         totalmessages = 0;
         
+        cout << mp << endl;
         if(mp) {
             for(int i = 0; i < gt->wsetsize; i++) {
                 if(part(gt->wset[i]) == PART) {
@@ -148,42 +137,22 @@ public:
     void run() {
         switch(txntype) {
             case NO_ID:
-            
-                // only implemented for single-partition NO txns
-                // (i.e. run2 doesn't do anything) so far
-                pthread_mutex_lock(&olatch);
-                outgoingdbtxns.enqueue(this);
-                pthread_mutex_unlock(&olatch);
-            
+                if (mp)
+                    cout << "NOR ";                     // Perform read (mp)
+                else
+                    cout << "NO ";                      // Perform write (sp)
+                    
+                cout << txnid << " " << argcount << " ";
+                for (int i = 0; i < argcount; i++)      // Print out all info
+                    cout << args[i] << " ";             //      and args
+                cout << endl;
                 break;
-            
-//                if (mp) {
-//                    cout << "NOR ";                     // Perform read (mp)
-//                    log << "NOR ";
-//                } else {
-//                    cout << "NO ";                      // Perform write (sp)
-//                    log << "NO ";
-//                }
-//                    
-//                cout << txnid << " " << argcount << " ";
-//                log << txnid << " " << argcount << " ";
-//                for (int i = 0; i < argcount; i++) {    // Print out all info
-//                    cout << args[i] << " ";             //      and args
-//                    log << args[i] << " ";
-//                }
-//                cout << endl;
-//                log << endl;
-//                break;
                     
             case PAY_ID:
                 cout << "PAY " << txnid << " " << argcount << " ";
-                log << "PAY " << txnid << " " << argcount << " ";
-                for (int i = 0; i < argcount; i++) {    // Print out all info
+                for (int i = 0; i < argcount; i++)      // Print out all info
                     cout << args[i] << " ";             //      and args
-                    log << args[i] << " ";             //      and args
-                }
                 cout << endl;
-                log << endl;
                 break;
                 
             
@@ -203,13 +172,9 @@ public:
             case NO_ID:
                 if (mp && reads[0])                     // Successful reads (mp)
                     cout << "NO " << txnid << " " << argcount << " ";
-                    log << "NO " << txnid << " " << argcount << " ";
-                    for (int i = 0; i < argcount; i++) {// Print out all info
+                    for (int i = 0; i < argcount; i++)  // Print out all info
                         cout << args[i] << " ";         //      and args
-                        log << args[i] << " ";
-                    }
                     cout << endl;
-                    log << endl;
                 break;                                  // Finish with new order
                    
             case PAY_ID:
@@ -361,7 +326,6 @@ void processCompletedTxn(Txn *t) {
             }
         }
         
-        log << "COMPLETED TXN " << t->txnid;
         txns.erase(t->txnid);
         delete t;
 
@@ -404,7 +368,6 @@ void processCompletedTxn(Txn *t) {
     }
 }
 
-// don't need to use this function if tpcc backend is running in pthread
 void fillIncomingDBTxns() {
     map<KEY, VAL> newtxn;                           // Generic new txn
     KEY i, read_in;
@@ -429,37 +392,22 @@ void fillIncomingDBTxns() {
     }
 }
 
-void *runtpcc(void *args) {
-    // Thad: call tpc_c.cc main function from here, e.g.:
-    //
-    //      pthread_t tpccthread;
-    //      pthread_create(tpccthread, NULL, args, NULL);
-    //
-    // use incomingdbtxns and outgoingdbtxns to communicate between, e.g. (example taken from line 154 above)
-    //
-    //      pthread_mutex_lock(&olatch);
-    //      outgoingdbtxns.enqueue(this);
-    //      pthread_mutex_unlock(&olatch);
-}
-
 int main(int argc, char **argv) {
     ginits(atoi(argv[2]), argv[1]);
 
     PART = atoi(argv[1]);
     
-    log << "PROGRAM STARTED" << endl << flush;
-    
     int j = 1;
     GenericTxn *t = NULL;
     while(true) {
 
-        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY
+        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
         if (j > 1) {
             map<KEY, VAL> newtxn;
             newtxn[0] = j - 1;
             newtxn[1] = 1;
             incomingdbtxns.enqueue(newtxn);
-        }*/
+        }
         t = generate(j++, 10);
         incomingtxns.enqueue(*t);
         
@@ -483,17 +431,12 @@ int main(int argc, char **argv) {
             processNewTxn(incomingtxns.dequeue());
         }
 
-        
-        pthread_mutex_lock(&ilatch);
         while(incomingdbtxns.size()) {
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
-            pthread_mutex_lock(&ilatch);
             Txn *t = txns[dbtxn[0]];                // Txn id
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
-            pthread_mutex_lock(&ilatch);
         }
-        pthread_mutex_unlock(&ilatch);
 
     }
     return 0;

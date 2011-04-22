@@ -15,6 +15,8 @@ open(NODES, $nodefile) or die("Failed to open nodefile.\n");
 my @allnodes = <NODES>;
 my @nodes = unique(@allnodes);
 
+my $port = 10000 + int rand 10000;
+
 if($db + $med + $preproc > $#nodes+1) {
     die("Only ".($#nodes+1)." nodes allocated for $db dbs $med mediators and $preproc preprocessors.\n");
 }
@@ -23,23 +25,23 @@ if($db + $med + $preproc > $#nodes+1) {
 for(my $i = 0; $i < $db; $i++) {
     my $addr = shift @nodes;
     chomp $addr;
-    print("node$i=db:0:0:$i:$addr:10000:10000\n");
+    print("node$i=db:0:0:$i:$addr:$port:$port\n");
 }
 
 for(my $i = 0; $i < $med; $i++) {
     my $addr = shift @nodes;
     chomp $addr;
-    print("node".(100+$i)."=mediator:0:0:$i:$addr:10000:10000\n");
+    print("node".(100+$i)."=mediator:0:0:$i:$addr:$port:$port\n");
 }
 
 for(my $i = 0; $i < $preproc; $i++) {
     my $addr = shift @nodes;
     chomp $addr;
-    print("node".(200+$i)."=preprocessor:0:0:$i:$addr:10000:10000\n");
+    print("node".(200+$i)."=preprocessor:0:0:$i:$addr:$port:$port\n");
 }
 
 print "binlog=/tmp/binlog\n";
-print "wait_time=10000\n";
+print "wait_time=50000\n";
 
 # unique: removes duplicate items in a list
 sub unique {
