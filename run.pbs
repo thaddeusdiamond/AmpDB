@@ -6,5 +6,5 @@
 cd db
 ./makeconf.pl 1 1 1 > test.conf
 # utils/cluster test.conf db/TPC-C preprocessor/preproc mediator/mediator
-utils/cluster test.conf util/dummy-db preprocessor/preproc mediator/mediator
+utils/cluster test.conf utils/dummy-db preprocessor/preproc mediator/mediator
 

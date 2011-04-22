@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <fstream>
 #include <map>
 #include "../circularbuffer.h"
 #include "../loadgen/loadgen.h"
@@ -25,13 +24,13 @@ using namespace std;
 class Txn;
 class Lock;
 
-ofstream log;
-    
 int PART;
 map<int, Txn *> txns;
 map<KEY, Lock *> locks;
 DEQUE<Txn *> readytxns;
 int partitionid;
+pthread_t tpccthread;
+
 
 DEQUE<Message> incomingmsgs;
 DEQUE<Message> oldmessages;
@@ -45,10 +44,6 @@ Configuration *config;
 RemoteConnection *connection;
 
 void ginits(int node_id, char *config_file) {
-    log.open("../lm/lm.log");                        // Temp log file 
-    if (!log.is_open())
-        throw "Unable to write to log";
-    
     setlinebuf(stdout);
     setlinebuf(stderr);
     std::ios::sync_with_stdio();
@@ -146,7 +141,7 @@ public:
     // is ready to be sent to the storage layer for execution. run sends a command
     // to the storage layer starting the appropriate stored procedure running with the args supplied
     void run() {
-        log << "RUNNING TXN: " << txnid;
+//        cout << "RUNNING TXN: " << txnid;
         switch(txntype) {
             case NO_ID:
                 if (mp)
@@ -166,7 +161,7 @@ public:
                 break;
         }
         
-        log << "\tTYPE: " << type << endl;
+//        cout << "\tTYPE: " << type << endl;
         pthread_mutex_lock(&olatch);
         outgoingdbtxns.enqueue(this);
         pthread_mutex_unlock(&olatch);
@@ -335,7 +330,6 @@ void processCompletedTxn(Txn *t) {
             }
         }
         
-        log << "COMPLETED TXN " << t->txnid;
         txns.erase(t->txnid);
         delete t;
 
@@ -378,7 +372,6 @@ void processCompletedTxn(Txn *t) {
     }
 }
 
-// don't need to use this function if tpcc backend is running in pthread
 void fillIncomingDBTxns() {
     map<KEY, VAL> newtxn;                           // Generic new txn
     KEY i, read_in;
@@ -403,12 +396,13 @@ void fillIncomingDBTxns() {
     }
 }
 
+
+
 void runtpcc() {
     // Thad: call tpc_c.cc main function from here, e.g.:
     //
           
-          log << "STARTED THREAD FOR DATABASE" << endl;
-          pthread_t tpccthread;
+          cout << "STARTED THREAD FOR DATABASE" << endl;
           pthread_create(&tpccthread, NULL, &tpcc_thread, &PART);
     //
     // use incomingdbtxns and outgoingdbtxns to communicate between, e.g. (example taken from line 154 above)
@@ -423,7 +417,7 @@ int main(int argc, char **argv) {
 
     PART = atoi(argv[1]);
     
-    log << "PROGRAM STARTED" << endl << flush;
+    cout << "PROGRAM STARTED" << endl << flush;
     runtpcc();
     
     int j = 1;
@@ -453,18 +447,16 @@ int main(int argc, char **argv) {
             processNewTxn(incomingtxns.dequeue());
         }
 
-        
-        pthread_mutex_lock(&ilatch);
         while(incomingdbtxns.size()) {
-            map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
             pthread_mutex_lock(&ilatch);
+            map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
+            pthread_mutex_unlock(&ilatch);
+            
             Txn *t = txns[dbtxn[0]];                // Txn id
-            log << "NEW DB TXN INCOMING: " << dbtxn[0] << endl;
+            cout << "NEW DB TXN INCOMING: " << dbtxn[0] << endl;
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
-            pthread_mutex_lock(&ilatch);
         }
-        pthread_mutex_unlock(&ilatch);
 
     }
     

@@ -225,11 +225,11 @@ int perform_query(string type, Key id, Key *args) {
 }
 
 void *tpcc_thread(void *part) {
+    cout << "STARTED DB" << endl;
     tpccinit();
     Part = *((int *)part);                      // Set global partition
     
-    log << "STARTED DB" << endl;
-            
+    cout << "DATABASE INITIALIZED" << endl;        
     while (true) {
         while (outgoingdbtxns.size()) {
             map<Key, Val> newtxn;               // Generic new txn
@@ -238,14 +238,14 @@ void *tpcc_thread(void *part) {
             GenericTxn *t = outgoingdbtxns.dequeue();
             pthread_mutex_unlock(&olatch);
 
-            log << "IN DB FOR TXN " << t->txnid << endl;
+            cout << "IN DB FOR TXN " << t->txnid << endl;
             
             newtxn[0] = t->txnid;               // Make a new map
             newtxn[1] = perform_query(t->type, t->txnid, t->args);
             
-            pthread_mutex_lock(&olatch);
+            pthread_mutex_lock(&ilatch);
             incomingdbtxns.enqueue(newtxn);     // Enqueue onto thread-safe
-            pthread_mutex_unlock(&olatch);
+            pthread_mutex_unlock(&ilatch);
         }
     }
     

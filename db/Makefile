@@ -9,10 +9,6 @@ OBJS = $(SRCS:.cc=.o)
 
 all: backend
 
-# Make the backend
-backend: backend.cc
-	$(CXX) $(CFLAGS) backend.cc -o backend
-	
 # Create objects from .cc files
 %.o: %.cc
 	$(CXX) $(CFLAGS) -o $@ -c $<

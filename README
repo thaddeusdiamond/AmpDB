@@ -1,4 +1,3 @@
 How to circularly pipe lock manager with database via stdin
-(../lm/lm "../test.conf" 0 < db.out > ../lm/lm.out & ./TPC-C "../test.conf" 0 > db.out < ../lm/lm.out)
 
     ./lm 0 < ../buffer.lm.db | ../db/TPC-C 0 > ../buffer.lm.db

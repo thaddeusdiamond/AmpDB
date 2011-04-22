@@ -72,6 +72,7 @@ MediatorServer::MediatorServer(Configuration& config)
     int64_t myPartitionID = reinterpret_cast<MediatorNode*>(
             _config.allnodes.find(_config.myNodeID)->second)->partitionID;
     _next_txnid = myPartitionID << (63 - partition_bits);
+    _next_partition = myPartitionID % _config.preprocessorpartitions.size();
 }
 
 int MediatorServer::StartServer(){
@@ -283,6 +284,7 @@ void MediatorServer::AddDurableIds(const Message& msg){
 }
 
 void MediatorServer::SendMsg(const Message& msg){
+// printf("txn -> uid = %ld\n", msg.txnid);
     hash_map<int64_t, int>::iterator it = _txn_origin.find(msg.txnid);
     const int fd = it->second;
     _txn_origin.erase(it);

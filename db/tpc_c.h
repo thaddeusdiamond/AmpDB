@@ -23,7 +23,6 @@
 #include <cstdio>
 #include <stdint.h>
 #include <iostream>
-#include <fstream>
 
 #define DEQUE CircularBuffer
 #define Deque CircularBuffer    // Data structure aliases
