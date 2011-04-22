@@ -177,6 +177,7 @@ class QuickMap {
                     return id - (part * ITEMS); //      modulo # items
                     break;
             }
+            return -1;
         }
 };
 

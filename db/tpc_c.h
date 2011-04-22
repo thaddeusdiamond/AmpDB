@@ -15,7 +15,6 @@
 #include "../quickmap.h"
 #include "../remote.h"
 #include "../loadgen/loadgen.h"
-#include "../freeport_config.h"
 #include <map>               
 #include <string>
 #include <cstring>
@@ -25,6 +24,7 @@
 #include <stdint.h>
 #include <iostream>
 
+#define DEQUE CircularBuffer
 #define Deque CircularBuffer    // Data structure aliases
 #define Key int64_t
 #define Val int64_t
@@ -390,7 +390,10 @@ bool warehouse_local(Key w_id);
 void tpccinit();
 void tpccdump();
 
-// TODO: orderstatustxn, deliverytxn, stockleveltxn
+    /*                      Threading                       */
+void free_database();
+int perform_query(string type, Key id, Key *args);
+void *tpcc_thread(void *part);
 
     /*                      New Order                       */
 int new_order(Key *args, Key txnid);
