@@ -119,6 +119,9 @@ public:
     int64_t rset[64];
     int64_t wset[64];
     int64_t args[64];
+    
+    string type;            // Type of operation to send to DB
+
 };
 
 #endif  // !define(_YALE_SCALE_GENERICTXN_H_)

@@ -37,7 +37,7 @@ DEQUE<Message> incomingmsgs;
 DEQUE<Message> oldmessages;
 DEQUE<GenericTxn> incomingtxns;
 DEQUE< map<KEY, VAL> > incomingdbtxns;
-DEQUE<Txn> outgoingdbtxns;
+DEQUE<GenericTxn *> outgoingdbtxns;
 
 pthread_mutex_t olatch, ilatch;
 
@@ -146,6 +146,7 @@ public:
     // is ready to be sent to the storage layer for execution. run sends a command
     // to the storage layer starting the appropriate stored procedure running with the args supplied
     void run() {
+        log << "RUNNING TXN: " << txnid;
         switch(txntype) {
             case NO_ID:
                 if (mp)
@@ -165,6 +166,7 @@ public:
                 break;
         }
         
+        log << "\tTYPE: " << type << endl;
         pthread_mutex_lock(&olatch);
         outgoingdbtxns.enqueue(this);
         pthread_mutex_unlock(&olatch);
@@ -178,7 +180,7 @@ public:
         switch(txntype) {
             case NO_ID:
                 if (mp && reads[0])
-                    type = "NO"
+                    type = "NO";
                 break;
                 
             case OS_ID:
@@ -218,8 +220,7 @@ public:
     int messagewaits;       // number of messages still waiting to be received before txn can complete
     bool readphasedone;     // set to true after read phase is complete for multipartition txns
     map<KEY,VAL> reads;     // local copy of data state; initially empty
-    string type;            // Type of operation to send to DB
-
+    
 };
 
 
@@ -288,7 +289,7 @@ void processNewTxn(GenericTxn gt) {
 //        }
 //    }
 
-        
+    
     // start txn
     if(t->lockwaits == 0)
         t->run();
@@ -406,8 +407,9 @@ void runtpcc() {
     // Thad: call tpc_c.cc main function from here, e.g.:
     //
           
+          log << "STARTED THREAD FOR DATABASE" << endl;
           pthread_t tpccthread;
-          pthread_create(&tpccthread, NULL, &tpcc_thread, (void *)PART);
+          pthread_create(&tpccthread, NULL, &tpcc_thread, &PART);
     //
     // use incomingdbtxns and outgoingdbtxns to communicate between, e.g. (example taken from line 154 above)
     //
@@ -428,13 +430,7 @@ int main(int argc, char **argv) {
     GenericTxn *t = NULL;
     while(true) {
 
-        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY
-        if (j > 1) {
-            map<KEY, VAL> newtxn;
-            newtxn[0] = j - 1;
-            newtxn[1] = 1;
-            incomingdbtxns.enqueue(newtxn);
-        }*/
+        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
         t = generate(j++, 10);
         incomingtxns.enqueue(*t);
         
@@ -445,7 +441,6 @@ int main(int argc, char **argv) {
             // non-blocking input collection
             connection->FillIncomingMessages(&incomingmsgs);
             connection->FillIncomingTxns(&incomingtxns);
-//            fillIncomingDBTxns();
         }
 
         while(incomingmsgs.size()) {
@@ -464,6 +459,7 @@ int main(int argc, char **argv) {
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
             pthread_mutex_lock(&ilatch);
             Txn *t = txns[dbtxn[0]];                // Txn id
+            log << "NEW DB TXN INCOMING: " << dbtxn[0] << endl;
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
             pthread_mutex_lock(&ilatch);

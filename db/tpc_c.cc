@@ -25,11 +25,11 @@ QuickMap< DBIndex<Key> >   c_last_index(C_TABLE_ID, MAXC);
 
 extern Configuration *config;                   // Used in communicating
 extern RemoteConnection *connection;            //  w/mediator for 2nd lookup
-extern class Txn;
-extern DEQUE<Txn> outgoingdbtxns;
-extern DEQUE< map<KEY, VAL> > incomingdbtxns;
+extern DEQUE<GenericTxn *> outgoingdbtxns;
+extern DEQUE< map<Key, Val> > incomingdbtxns;
 
 extern ofstream log;
+extern pthread_mutex_t olatch, ilatch;
 
 /* <---------------------- BEGIN RAND FUNCS -----------------------> */
 
@@ -221,23 +221,35 @@ int perform_query(string type, Key id, Key *args) {
     } else if (!type.compare("PAY")) {
         return payment(args); 
     }
+    return false;                           // WILL NEVER REACH
 }
 
-void tpcc_thread(void *part) {
+void *tpcc_thread(void *part) {
     tpccinit();
-    Part = (int) part;                          // Set global partition
+    Part = *((int *)part);                      // Set global partition
     
+    log << "STARTED DB" << endl;
+            
     while (true) {
         while (outgoingdbtxns.size()) {
-            map<KEY, VAL> newtxn;               // Generic new txn
-            Txn *t = outgoingdbtxns.dequeue();
+            map<Key, Val> newtxn;               // Generic new txn
+            
+            pthread_mutex_lock(&olatch);
+            GenericTxn *t = outgoingdbtxns.dequeue();
+            pthread_mutex_unlock(&olatch);
+
+            log << "IN DB FOR TXN " << t->txnid << endl;
             
             newtxn[0] = t->txnid;               // Make a new map
             newtxn[1] = perform_query(t->type, t->txnid, t->args);
             
+            pthread_mutex_lock(&olatch);
             incomingdbtxns.enqueue(newtxn);     // Enqueue onto thread-safe
+            pthread_mutex_unlock(&olatch);
         }
     }
+    
+    return NULL;
 }
 
 void free_database() {

@@ -393,7 +393,8 @@ void tpccdump();
 
     /*                      Threading                       */
 void free_database();
-int tpcc_thread(int part, string type, Key id, Key *args);
+int perform_query(string type, Key id, Key *args);
+void *tpcc_thread(void *part);
 
     /*                      New Order                       */
 int new_order(Key *args, Key txnid);
