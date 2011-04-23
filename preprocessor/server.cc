@@ -62,6 +62,7 @@ class MasterStrategy : public ServerStrategy{
     void ProcessBatch();
     void SendBatch(const vector<TxnInfo*>& batch);
     void MakeDurable(const vector<TxnInfo*>& batch);
+    void InformMediator(const vector<TxnInfo*>& batch);
 
     vector<TxnInfo> _batch;
 };
@@ -299,22 +300,12 @@ void MasterStrategy::MakeDurable(const vector<TxnInfo*>& batch){
     }
 
     int64_t txns_size = 0;
-    set<int> mediators;
     for(vector<TxnInfo*>::const_iterator it = batch.begin();
-        it != batch.end(); ++it){
+        it != batch.end(); ++it)
         txns_size += GenericTxn::FIXED_HEADER_SIZE +
                      (*it)->rsetsize + (*it)->wsetsize + (*it)->argcount;
-        mediators.insert((*it)->source_mediator);
-    }
 
-    // Size of the message to mediator saying: committed
-    // TODO: build lists for different mediators
-    int64_t committed_size = batch.size() + Message::FIXED_HEADER_SIZE;
-
-    // We are going to reuse the buffer, make sure it's large enough
-    char* buf = new char[txns_size > committed_size ?
-                         txns_size * sizeof(int64_t) :
-                         committed_size * sizeof(int64_t)];
+    char* buf = new char[txns_size * sizeof(int64_t)];
     char* p = buf;
     for(vector<TxnInfo*>::const_iterator it = batch.begin();
         it != batch.end(); ++it){
@@ -328,27 +319,39 @@ void MasterStrategy::MakeDurable(const vector<TxnInfo*>& batch){
     while(n < count && (c = write(_binlog_fd, buf + n, count - n)) > 0)
         n += c;
     fsync(_binlog_count);
+    delete [] buf;
 
     // TODO: send out the order and wait for half of the replicas to response
+    InformMediator(batch);
 
-    int64_t* buf_ = reinterpret_cast<int64_t*>(buf);
-    buf_[0] = 0;
-    buf_[1] = _config.myNodeID;
-    buf_[2] = 0;
-    buf_[3] = batch.size() * sizeof(int64_t);
+    if(pid == 0)
+        _exit(0);
+}
+
+void MasterStrategy::InformMediator(const vector<TxnInfo*>& batch){
+    // Size of the message to mediator saying: committed
+    // TODO: build lists for different mediators
+    int64_t committed_size = batch.size() + Message::FIXED_HEADER_SIZE;
+    int64_t* buf = new int64_t[committed_size];
+    buf[0] = 0;
+    buf[1] = _config.myNodeID;
+    buf[2] = 0;
+    buf[3] = batch.size() * sizeof(int64_t);
     int i = 4;
     for(vector<TxnInfo*>::const_iterator it = batch.begin();
         it != batch.end(); ++it, ++i)
-        buf_[i] = (*it)->txnid_unordered;
+        buf[i] = (*it)->txnid_unordered;
+
+    set<int> mediators;
+    for(vector<TxnInfo*>::const_iterator it = batch.begin();
+        it != batch.end(); ++it)
+        mediators.insert((*it)->source_mediator);
 
     for(set<int>::const_iterator it = mediators.begin();
         it != mediators.end(); ++it)
         _remote.Send(*it, buf, committed_size * sizeof(int64_t));
 
     delete [] buf;
-
-    if(pid == 0)
-        _exit(0);
 }
 
 void SlaveStrategy::RunServer(){
