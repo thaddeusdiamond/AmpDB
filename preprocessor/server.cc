@@ -277,8 +277,10 @@ void MasterStrategy::SendBatch(const vector<TxnInfo*>& batch){
 }
 
 void MasterStrategy::MakeDurable(const vector<TxnInfo*>& batch){
-    if(_binlog_fd < 0)
+    if(_binlog_fd < 0){
+        InformMediator(batch);
         return;
+    }
 
     int pid = fork();
     if(pid < 0){
