@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <map>
+#include <sys/time.h>
 #include "../circularbuffer.h"
 #include "../loadgen/loadgen.h"
 #include "../global.h"
@@ -18,7 +19,7 @@ using namespace std;
 #define KEY int64_t
 #define VAL int64_t
 
-#define DEBUG 1
+#define DEBUG 0
 #define NPARTS 64
 
 class Txn;
@@ -42,6 +43,8 @@ pthread_mutex_t olatch, ilatch;
 
 Configuration *config;
 RemoteConnection *connection;
+
+double tim() { struct timeval tv; gettimeofday(&tv, NULL); return tv.tv_sec + tv.tv_usec/1e6; }
 
 void ginits(int node_id, char *config_file) {
     setlinebuf(stdout);
@@ -274,16 +277,6 @@ void processNewTxn(GenericTxn gt) {
         }
     }
 
-//    // THIS IS AN AWFUL HACK (TODO: FIX IT)
-//    // since TPC-C (NO/Payment only) has no read-write conflicts, omit locking read items
-//    for(int j = 0; j < t->rsetsize; j++) {
-//        if(part((r = t->rset[j])) == PART) {
-//            if(!locks.count(r))
-//                locks[r] = new Lock();
-//            locks[r]->lock(t);
-//        }
-//    }
-
     
     // start txn
     if(t->lockwaits == 0)
@@ -311,15 +304,7 @@ void processCompletedTxn(Txn *t) {
     if(!t->mp || t->readphasedone) {
         // txn is done; release locks, clean up, and (TODO) send ack to client
         KEY r;
-        for(int j = 0; j < t->rsetsize; j++) {
-            if(part((r = t->rset[j])) == PART) {
-                locks[r]->unlock(t);
-                if(locks[r]->owner == NULL) {
-                    delete locks[r];
-                    locks.erase(r);
-                }
-            }
-        }
+
         for(int j = 0; j < t->wsetsize; j++) {
             if(part((r = t->wset[j])) == PART) {
                 locks[r]->unlock(t);
@@ -402,7 +387,7 @@ void runtpcc() {
     // Thad: call tpc_c.cc main function from here, e.g.:
     //
           
-          cout << "STARTED THREAD FOR DATABASE" << endl;
+          if(DEBUG) cout << "STARTED THREAD FOR DATABASE" << endl;
           pthread_create(&tpccthread, NULL, &tpcc_thread, &PART);
     //
     // use incomingdbtxns and outgoingdbtxns to communicate between, e.g. (example taken from line 154 above)
@@ -417,25 +402,24 @@ int main(int argc, char **argv) {
 
     PART = atoi(argv[1]);
     
-    cout << "PROGRAM STARTED" << endl << flush;
+    if(DEBUG) cout << "PROGRAM STARTED" << endl << flush;
     runtpcc();
     
-    int j = 1;
-    GenericTxn *t = NULL;
+    int count = 0;
+    int active = 0;
     while(true) {
 
         /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
-        t = generate(j++, 10);
-        incomingtxns.enqueue(*t);
         
-        if(DEBUG) {
-            // input collection from stdin
+//        while(active < 1) {
+//            t = generate(j++, 10);
+//            incomingtxns.enqueue(*t);
+//            active++;
+//        }        
 
-        } else {
-            // non-blocking input collection
-            connection->FillIncomingMessages(&incomingmsgs);
-            connection->FillIncomingTxns(&incomingtxns);
-        }
+        // non-blocking input collection
+        connection->FillIncomingMessages(&incomingmsgs);
+        connection->FillIncomingTxns(&incomingtxns);
 
         while(incomingmsgs.size()) {
             Txn *t = processNewMsg(incomingmsgs.dequeue());
@@ -447,17 +431,36 @@ int main(int argc, char **argv) {
             processNewTxn(incomingtxns.dequeue());
         }
 
-        while(incomingdbtxns.size()) {
+        pthread_mutex_lock(&ilatch);
+        int s = incomingdbtxns.size();
+        pthread_mutex_unlock(&ilatch);
+        
+        while(s > 0) {
             pthread_mutex_lock(&ilatch);
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
             pthread_mutex_unlock(&ilatch);
             
             Txn *t = txns[dbtxn[0]];                // Txn id
-            cout << "NEW DB TXN INCOMING: " << dbtxn[0] << endl;
+            if(DEBUG) ;cout << "NEW DB TXN INCOMING: " << dbtxn[0] << endl;
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
+            s--;
+            active--;
+            count++;
+            
+            TxnStatus status = COMMITTED;
+            Message m(t->txnid_unordered, config->myNodeID,
+                      t->source_mediator, sizeof(status), &status);
+            connection->SendDBMsg(m);
+            
         }
 
+        double tm = tim()+0.01;
+        if(tim() > tm) {
+            cout << count << "\n" << flush;
+            tm = tim() + 0.01;
+            count = 0;
+        }
     }
     
     free_database();
