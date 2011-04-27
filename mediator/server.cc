@@ -83,6 +83,13 @@ int MediatorServer::StartServer(){
 #if GENERATE_TXN
     int generated = 0;
     timespec starting_time;
+    int active_txns = GENERATE_TXN;
+    {
+        map<string, string>::const_iterator it = 
+            _config.other_opt.find("active_txns");
+        if(it != _config.other_opt.end())
+            active_txns = atoi(it->second.c_str());
+    }
     clock_gettime(CLOCK_MONOTONIC, &starting_time);
 #endif
 
@@ -102,7 +109,7 @@ int MediatorServer::StartServer(){
         _remote.FillIncomingTxns(&txns, 0, &origin);
 #else
         {
-            int need = GENERATE_TXN - _txn_origin.size() - queued_txns.size();
+            int need = active_txns - _txn_origin.size() - queued_txns.size();
             if(need <= 0){
                 timespec to_sleep = { 0, 1000000 };  // 1 ms
                 nanosleep(&to_sleep, NULL);
