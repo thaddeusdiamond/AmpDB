@@ -124,7 +124,7 @@ void createdistrict(Key d_id, Key d_w_id) {
     fill_with_nums(0, 9, d.d_zip);
     d.d_zip[9] = '\0';
     
-    /* <---------        INITIAL DEFAULTS -----------> */
+    /* <---------        INITIAL DEFAULTS -----------> */.
     d.d_tax = 0.05;
     d.d_ytd = 0;
     d.d_next_o_id = 1;
@@ -231,7 +231,7 @@ void *tpcc_thread(void *part) {
     tpccinit();
     Part = *((int *)part);                      // Set global partition
     
-    cout << "DATABASE INITIALIZED" << endl;        
+    if(DEBUG) cout << "DATABASE INITIALIZED" << endl;        
     while (true) {
         
         pthread_mutex_lock(&olatch);
