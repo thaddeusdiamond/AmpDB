@@ -108,7 +108,6 @@ public:
         lockwaits = 0;
         totalmessages = 0;
         
-        cout << mp << endl;
         if(mp) {
             for(int i = 0; i < gt->wsetsize; i++) {
                 if(part(gt->wset[i]) == PART) {
@@ -307,15 +306,15 @@ void processCompletedTxn(Txn *t) {
     if(!t->mp || t->readphasedone) {
         // txn is done; release locks, clean up, and (TODO) send ack to client
         KEY r;
-        for(int j = 0; j < t->rsetsize; j++) {
-            if(part((r = t->rset[j])) == PART) {
-                locks[r]->unlock(t);
-                if(locks[r]->owner == NULL) {
-                    delete locks[r];
-                    locks.erase(r);
-                }
-            }
-        }
+//        for(int j = 0; j < t->rsetsize; j++) {
+//            if(part((r = t->rset[j])) == PART) {
+//                locks[r]->unlock(t);
+//                if(locks[r]->owner == NULL) {
+//                    delete locks[r];
+//                    locks.erase(r);
+//                }
+//            }
+//        }
         for(int j = 0; j < t->wsetsize; j++) {
             if(part((r = t->wset[j])) == PART) {
                 locks[r]->unlock(t);
@@ -402,12 +401,6 @@ int main(int argc, char **argv) {
     while(true) {
 
         /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
-        if (j > 1) {
-            map<KEY, VAL> newtxn;
-            newtxn[0] = j - 1;
-            newtxn[1] = 1;
-            incomingdbtxns.enqueue(newtxn);
-        }
         t = generate(j++, 10);
         incomingtxns.enqueue(*t);
         
