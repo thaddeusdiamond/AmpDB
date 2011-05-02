@@ -18,7 +18,7 @@ using namespace std;
 #define KEY int64_t
 #define VAL int64_t
 
-#define DEBUG 1
+#define DEBUG 0
 #define NPARTS 64
 
 class Txn;
@@ -37,6 +37,8 @@ DEQUE< map<KEY, VAL> > incomingdbtxns;
 
 Configuration *config;
 RemoteConnection *connection;
+
+ofstream log;
 
 void ginits(int node_id, char *config_file) {
     setlinebuf(stdout);
@@ -138,12 +140,13 @@ public:
             case NO_ID:
                 if (mp)
                     cout << "NOR ";                     // Perform read (mp)
-                else
+                else 
                     cout << "NO ";                      // Perform write (sp)
                     
                 cout << txnid << " " << argcount << " ";
                 for (int i = 0; i < argcount; i++)      // Print out all info
                     cout << args[i] << " ";             //      and args
+                /* THIS LINE IS THE PROBLEM LINE!!! */
                 cout << endl;
                 break;
                     
@@ -169,11 +172,12 @@ public:
     void run2() {
         switch(txntype) {
             case NO_ID:
-                if (mp && reads[0])                     // Successful reads (mp)
+                if (mp && reads[0]) {                   // Successful reads (mp)
                     cout << "NO " << txnid << " " << argcount << " ";
                     for (int i = 0; i < argcount; i++)  // Print out all info
                         cout << args[i] << " ";         //      and args
                     cout << endl;
+                }
                 break;                                  // Finish with new order
                    
             case PAY_ID:
@@ -268,7 +272,7 @@ void processNewTxn(GenericTxn gt) {
             locks[r]->lock(t);
         }
     }
-
+    
 //    // THIS IS AN AWFUL HACK (TODO: FIX IT)
 //    // since TPC-C (NO/Payment only) has no read-write conflicts, omit locking read items
 //    for(int j = 0; j < t->rsetsize; j++) {
@@ -283,7 +287,7 @@ void processNewTxn(GenericTxn gt) {
     // start txn
     if(t->lockwaits == 0)
         t->run();
-}
+}        
 
 // process a new message, which is intermediate state from another partition's lock manager;
 // return a ptr to the txn the message referred to; NULL if no such txn exists
@@ -315,6 +319,7 @@ void processCompletedTxn(Txn *t) {
 //                }
 //            }
 //        }
+        
         for(int j = 0; j < t->wsetsize; j++) {
             if(part((r = t->wset[j])) == PART) {
                 locks[r]->unlock(t);
@@ -374,17 +379,19 @@ void fillIncomingDBTxns() {
     
     i = read_in = 0;
     while (true) {
-        if (kbhit() && (c = getch())) {
-            if (!isdigit(c)) {
-                newtxn[i++] = read_in;              // Whitespace, put in map
-                if (c == '\n') {
-                    incomingdbtxns.enqueue(newtxn); // Enqueue map
-                    i = 0;                          // Reset loading point
+        if (kbhit()) {
+            if ((c = getch())) {
+                if (!isdigit(c)) {
+                    newtxn[i++] = read_in;              // Whitespace, put in map
+                    if (c == '\n') {
+                        incomingdbtxns.enqueue(newtxn); // Enqueue map
+                        i = 0;                          // Reset loading point
+                    }
+                    read_in = 0;
+                } else {
+                    read_in *= 10;                      // New digit for read_in
+                    read_in += c - '0';
                 }
-                read_in = 0;
-            } else {
-                read_in *= 10;                      // New digit for read_in
-                read_in += c - '0';
             }
         } else
             break;
@@ -392,27 +399,25 @@ void fillIncomingDBTxns() {
 }
 
 int main(int argc, char **argv) {
+    log.open("lm.out");
     ginits(atoi(argv[2]), argv[1]);
 
     PART = atoi(argv[1]);
     
     int j = 1;
     GenericTxn *t = NULL;
+    
     while(true) {
 
-        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
-        t = generate(j++, 10);
-        incomingtxns.enqueue(*t);
-        
-        if(DEBUG) {
-            // input collection from stdin
+//        if(DEBUG) {
+//            // input collection from stdin
 
-        } else {
+//        } else {
             // non-blocking input collection
             connection->FillIncomingMessages(&incomingmsgs);
             connection->FillIncomingTxns(&incomingtxns);
             fillIncomingDBTxns();
-        }
+//        }
 
         while(incomingmsgs.size()) {
             Txn *t = processNewMsg(incomingmsgs.dequeue());
@@ -420,18 +425,25 @@ int main(int argc, char **argv) {
                 t->run2();
         }
         
+        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY
+        t = generate(j++, 10);
+        incomingtxns.enqueue(*t);
+        log << "SENDING TXN: " << (j - 1) << endl; */
         while(incomingtxns.size()) {
             processNewTxn(incomingtxns.dequeue());
         }
-
+        
         while(incomingdbtxns.size()) {
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
             Txn *t = txns[dbtxn[0]];                // Txn id
+            log << "RECEIVED FINISHED TXN: " << dbtxn[0] << endl;
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
         }
 
     }
+    log.close();
+    
     return 0;
 }
 

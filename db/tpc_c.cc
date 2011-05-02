@@ -8,6 +8,8 @@
  */
 
 #include "tpc_c.h"                              // tpc_c library
+
+#define MAX_ARGS 64
        
 Key Part;                                       // Machine partition #
 
@@ -25,6 +27,8 @@ QuickMap< DBIndex<Key> >   c_last_index(C_TABLE_ID, MAXC);
 
 Configuration *config;                          // Used in communicating
 RemoteConnection *connection;                   //  w/mediator for 2nd lookup
+
+ofstream log;
 
 /* <---------------------- BEGIN RAND FUNCS -----------------------> */
 
@@ -209,12 +213,12 @@ int main(int argc, char *argv[]) {
     } else Part = atoi(argv[2]);
     
 //    cout << "Initializing benchmarks, please wait..." << endl;
+    log.open("db.out");
     tpccinit();                                 // Initialize databases
     config = new Configuration(Part, argv[1]);
-    connection = RemoteConnection::GetInstance(*config);
-    /*cout << "INITIALIZED!" << endl;
+    //connection = RemoteConnection::GetInstance(*config);
     
-    <---------------  BENCHMARKING TPC-C BY ITSELF  ------------->
+    /*<---------------  BENCHMARKING TPC-C BY ITSELF  ------------->
     int j, sum, low, high;
     GenericTxn *t;
     sum = low = high = 0;
@@ -251,8 +255,8 @@ int main(int argc, char *argv[]) {
         cin >> type;                            // Read in variables
         cin >> id;
         cin >> argcount;
-
-        Key args[argcount];                     // Static args array
+        
+        Key args[MAX_ARGS];                     // Static args array
         for (int i = 0; i < argcount; i++)
             cin >> args[i];
         
@@ -275,8 +279,12 @@ int main(int argc, char *argv[]) {
         /*     PAYMENT TXN:         WRITE PHASE                 */
         } else if (!type.compare("PAY")) {
             cout << id << " " << payment(args) << endl; 
+        } else {
+            log << "ERROR!, UNKNOWN TYPE: " << type << endl;
         }
+        log << "FINISHED PROCESSING TXN: " << id << endl;
     }
+    log.close();
     
     /*                      FREE ALL MEMORY                     */
     delete &w_table;

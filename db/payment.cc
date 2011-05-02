@@ -52,8 +52,8 @@ Key payment(Key *args) {
         c_id = c_last_index[args[6]].key;
         if (c_id != prev_c_id) {            // SEND BACK TO MEDIATOR
             args[5] = c_id;          
-            connection->SendMediator(Part, args, (size_t) 7);
-            return false;
+            //connection->SendMediator(Part, args, (size_t) 7);
+            return TXN_REDO;
         }
     } else                                  // PRIMARY KEY LOOKUP
         c_id = args[6];
@@ -76,5 +76,5 @@ Key payment(Key *args) {
         h_table[h_id] = h;                      // Insert new history row
     }
     
-    return true;
+    return TXN_SUCCESS;
 }

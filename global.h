@@ -54,6 +54,10 @@ enum TxnStatus {
 #define NO_TXN 0
 #define NOR_TXN 1
 
+/////   DEFINE TRANSACTION CODES    /////
+#define TXN_SUCCESS 0
+#define TXN_FAILURE 1
+#define TXN_REDO 2
 
 /* <----------------------- END TPC GLOBAL -----------------------> */
 

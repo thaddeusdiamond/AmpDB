@@ -4,7 +4,7 @@
 # Standard compiler options
 PROG = TPC-C
 CFLAGS =  -g3 -Wno-deprecated -lpthread -lm
-SRCS = tpc_c.cc new_order.cc payment.cc ../loadgen/loadgen.cc ../remote.cc ../config.cc ../freeport_config.cc
+SRCS = tpc_c.cc new_order.cc payment.cc ../remote.cc ../config.cc
 OBJS = $(SRCS:.cc=.o)
 
 all: $(PROG)

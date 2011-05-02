@@ -49,7 +49,7 @@ int new_order(Key *args, Key id) {
     /*          CUSTOMER IN ANOTHER WAREHOUSE           */
     for (int i = 0; i < ol_cnt; i++) {
         if (!check_reads(ol_i[i]))
-            return false;                   // Validate item #
+            return TXN_FAILURE;                 // Validate item #
         decrease_supply(ol_w[i], s_table[ol_i[i]], ol_q[i]);
     }
     return true;
@@ -71,7 +71,7 @@ int processNewOrder(Key txnid, Key w_id, Key d_id, Key c_id, int ol_cnt,
     bool all_local = true;    
     for(int ol_number = 0; ol_number < ol_cnt; ol_number++) {
         if (!check_reads(ol_i[ol_number]))
-            return false;
+            return TXN_FAILURE;
         
         OrderLine ol(o_id, d_id, w_id, ol_number, ol_i[ol_number], 
                      ol_q[ol_number]);          // OL Tables
@@ -102,7 +102,7 @@ int processNewOrder(Key txnid, Key w_id, Key d_id, Key c_id, int ol_cnt,
     NewOrder no(o_id, d_id, w_id);              // Add new order to database
     no_table[o_id] = no;                        // Write new order       
 
-    return true;
+    return TXN_SUCCESS;
 }
 
 /* decrease_supply(Stock, Qty): 

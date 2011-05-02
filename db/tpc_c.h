@@ -14,8 +14,6 @@
 #include "../generictxn.h"
 #include "../quickmap.h"
 #include "../remote.h"
-#include "../loadgen/loadgen.h"
-#include "../freeport_config.h"
 #include <map>               
 #include <string>
 #include <cstring>
@@ -23,6 +21,7 @@
 #include <ctime>
 #include <cstdio>
 #include <stdint.h>
+#include <fstream>
 #include <iostream>
 
 #define Deque CircularBuffer    // Data structure aliases
