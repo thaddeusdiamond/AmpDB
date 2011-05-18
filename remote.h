@@ -5,16 +5,16 @@
 #include <unistd.h>
 #include <sys/select.h>
 
-#include <deque>
 #include <map>
+#include <queue>
 #include <set>
 #include "circularbuffer.h"
 #include "config.h"
 
-using std::deque;
 using std::map;
-using std::set;
 using std::pair;
+using std::queue;
+using std::set;
 
 class GenericTxn;
 class Message;
@@ -79,7 +79,6 @@ class RemoteConnection{
     map<int, int> _mediator_fds;
 
     // Mediator nodes: clients
-    // DB nodes: preprocessors
     set<int> _client_fds;
 
     // Type: fd -> nodeID
@@ -102,6 +101,10 @@ class RemoteConnection{
 
     int64_t* _read_buf;
     int _read_buf_size;
+
+#ifndef UNORDERED_RECEIVE
+    map<int, queue<CircularBuffer<GenericTxn>*> > _txn_bufs;
+#endif
 
     static map<const Configuration*, RemoteConnection*> _instances;
 };

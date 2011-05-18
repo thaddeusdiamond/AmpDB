@@ -53,7 +53,9 @@ namespace Preproc{
 class MasterStrategy : public ServerStrategy{
   public:
     MasterStrategy(const Configuration& config, RemoteConnection& remote)
-        : ServerStrategy(config, remote){}
+        : ServerStrategy(config, remote),
+          _conflict_resolver(ConflictResolver::GetInstance(_config)),
+          _scheduler(Scheduler::GetInstance(_config)){}
 
     void RunServer();
 
@@ -65,6 +67,8 @@ class MasterStrategy : public ServerStrategy{
     void InformMediator(const vector<TxnInfo*>& batch);
 
     vector<TxnInfo> _batch;
+    ConflictResolver* _conflict_resolver;
+    Scheduler* _scheduler;
 };
 
 class SlaveStrategy : public ServerStrategy {
@@ -196,14 +200,19 @@ void MasterStrategy::RunServer(){
 }
 
 void MasterStrategy::ProcessBatch(){
-    if(_batch.size() == 0)
+    if(_batch.size() == 0){
+        _scheduler->Tick();
+#ifndef UNORDERED_RECEIVE
+        SendBatch(vector<TxnInfo*>());
+#endif
         return;
+    }
 
     hash_map<int64_t, hash_set<int64_t> > conflicts;
-    ConflictResolver::GetInstance(_config)->FindConflicts(&_batch, &conflicts);
+    _conflict_resolver->FindConflicts(&_batch, &conflicts);
 
     vector<TxnInfo*> ordered;
-    Scheduler::GetInstance(_config)->Schedule(conflicts, &_batch, &ordered);
+    _scheduler->Schedule(conflicts, &_batch, &ordered);
 
     SendBatch(ordered);
     MakeDurable(ordered);
@@ -266,6 +275,7 @@ void MasterStrategy::SendBatch(const vector<TxnInfo*>& batch){
             }
         }
 
+#if UNORDERED_RECEIVE
     for(map<int, TxnsSize>::iterator it = total_size.begin();
         it != total_size.end(); ++it){
 	while(_remote.SendDB(
@@ -274,6 +284,24 @@ void MasterStrategy::SendBatch(const vector<TxnInfo*>& batch){
 	}
         delete [] it->second.buf;
     }
+#else  // !UNORDERED_RECEIVE
+    uint64_t zero = 0;
+    for(map<int, vector<DBNode*> >::const_iterator
+        it = _config.dbpartitions.begin(); it != _config.dbpartitions.end();
+        ++it){
+        int partition = it->first;
+        map<int, TxnsSize>::const_iterator jt = total_size.find(partition);
+        if(jt == total_size.end()){
+            while(_remote.SendDB(-1, partition, &zero, sizeof(int64_t)) < 0){
+            }
+        }else{
+            while(_remote.SendDB(
+                        -1, partition, jt->second.buf,
+                        jt->second.num_int64 * sizeof(int64_t)) < 0){
+            }
+        }
+    }
+#endif
 }
 
 void MasterStrategy::MakeDurable(const vector<TxnInfo*>& batch){

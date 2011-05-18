@@ -1,4 +1,6 @@
 #include <cstdio>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #include "../config.h"
 #include "../remote.h"
@@ -83,6 +85,7 @@ int main(int argc, char* argv[]){
 #endif
 #if VERBOSE
     int count = 0;
+    int64_t last_txnid = -1;
 #endif
 
     setlinebuf(stdout);
@@ -102,6 +105,12 @@ int main(int argc, char* argv[]){
                 it != txns.end(); ++it)
                 REDUCE_NETWORK_TRAFFIC{
                     // DumpTxn(*it, config);
+#if VERBOSE
+                    if(it->txnid < last_txnid)
+                        printf("Err: %"PRIx64" after %"PRIx64"\n",
+                               it->txnid, last_txnid);
+                    last_txnid = it->txnid;
+#endif
 
                     TxnStatus status = COMMITTED;
                     Message m(it->txnid_unordered, config.myNodeID,

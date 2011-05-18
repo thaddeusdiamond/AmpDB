@@ -31,6 +31,8 @@ class Scheduler{
             const hash_map<int64_t, hash_set<int64_t> >& conflicts,
             const vector<TxnInfo*>& txns);
 
+    uint64_t Tick(){ return ++_logic_clock; }
+
   protected:
     explicit Scheduler(const Configuration& config);
     virtual ~Scheduler();
@@ -46,11 +48,13 @@ class Scheduler{
     static map<const Configuration*, Scheduler*> _instances;
 
     uint64_t _sn_time_mask;
+    int _sn_time_shift;
     uint64_t _sn_instance_val;
     uint64_t _sn_serial_mask;
 
-    int64_t _latest_masked_time;
-    int64_t _latest_sn;
+    uint64_t _logic_clock;
+    uint64_t _latest_masked_time;
+    uint64_t _latest_sn;
 };
 }
 #endif  // !defined(_YALE_SCALE_PREPROCESSOR_SCHEDULER_H_)

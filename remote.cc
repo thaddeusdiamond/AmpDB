@@ -23,6 +23,8 @@
 #include "message.h"
 
 // #define STATIC_TXN_FILE "txn"
+// #define EXTRA_TXN 3
+// #define VERBOSE 1
 
 #if EXTRA_TXN
 #define REDUCE_NETWORK_TRAFFIC for(int i__ = 0; i__ <= EXTRA_TXN; ++i__)
@@ -66,7 +68,6 @@ RemoteConnection::RemoteConnection(const Configuration& config)
         printf("myNodeID (%ld) is not listed as a node.\n", config.myNodeID);
         exit(0);
     }
-
 
     const Node* node = it->second;
     myNodeType = node->nodeType;
@@ -118,16 +119,13 @@ void RemoteConnection::AddConnection(const Node* node, int fd){
                the_node->partitionID, fd);
         break;
     }
-    case PREPROCESSOR_NODE:
-    if(myNodeType == DB_NODE){
-        ADD_CLIENT(fd);
-    }else{
+    case PREPROCESSOR_NODE: {
         const PreprocessorNode* the_node =
             reinterpret_cast<const PreprocessorNode*>(node);
         ADD_PREPROC(the_node->nodeID, the_node->replicaID,
                     the_node->partitionID, fd);
+        break;
     }
-    break;
     case MEDIATOR_NODE: {
         const MediatorNode* the_node =
             reinterpret_cast<const MediatorNode*>(node);
@@ -156,6 +154,15 @@ void RemoteConnection::InitializeDB(const DBNode* node){
         if(it->second->nodeType == DB_NODE &&
            it->second->nodeID < node->nodeID)
             AddConnection(it->second, -1);
+
+#ifndef UNORDERED_RECEIVE
+    for(map<int, vector<PreprocessorNode*> >::const_iterator
+        it = _config.preprocessorpartitions.begin();
+        it != _config.preprocessorpartitions.end();
+        ++it)
+        _txn_bufs.insert(make_pair(it->first,
+                                   queue<CircularBuffer<GenericTxn>*>()));
+#endif
 
     TryReconnect();
 }
@@ -280,10 +287,12 @@ void RemoteConnection::BuildFDSets(){
             it != _mediator_fds.end(); ++it)
             if(it->second >= 0)
                 ADD(it->second, _txns_fd_set, _txns_fd_max);
-        for(set<int>::const_iterator it = _client_fds.begin();
-            it != _client_fds.end(); ++it)
-            if(*it >= 0)
-                ADD(*it, _txns_fd_set, _txns_fd_max);
+        for(map<int, map<int, int> >::const_iterator it = _preproc_fds.begin();
+            it != _preproc_fds.end(); ++it)
+            for(map<int, int>::const_iterator jt = it->second.begin();
+                jt != it->second.end(); ++jt)
+                if(jt->second >= 0)
+                    ADD(jt->second, _txns_fd_set, _txns_fd_max);
         for(map<int, map<int, int> >::const_iterator it = _db_fds.begin();
             it != _db_fds.end(); ++it)
             for(map<int, int>::const_iterator jt = it->second.begin();
@@ -512,6 +521,7 @@ void RemoteConnection::FillIncomingTxns(
             }
         }
     }else{
+        vector<int> erasing;
         for(map<int, int>::const_iterator it = _fds.begin();
             it != _fds.end() && actions; ++it){
             if(it->second >= 0 && FD_ISSET(it->second, &readset)){
@@ -525,66 +535,72 @@ void RemoteConnection::FillIncomingTxns(
                 if(r < sizeof(n)){
                     printf("Not receiving enough bytes from %d (%d, %d)\n",
                            it->first, r, c);
-                    Disconnected(it->first);
+                    erasing.push_back(it->first);
                     continue;
                 }
+
+                CircularBuffer<GenericTxn>* t = txns;
+#ifndef UNORDERED_RECEIVE
+                NodeType this_node_type =
+                    _config.allnodes.find(it->first)->second->nodeType;
+                if(myNodeType == DB_NODE &&
+                   this_node_type == PREPROCESSOR_NODE)
+                    t = new CircularBuffer<GenericTxn>();
+#endif
+
                 for(int64_t i = 0; i < n; ++i){
                     if(ReadTxn(it->second, &txn)){
                         printf("Not receiving full txn from %d\n",
                                it->first);
-                        Disconnected(it->first);
+                        erasing.push_back(it->first);
                         break;
                     }
                     REDUCE_NETWORK_TRAFFIC{
-                        txns->push_back(txn);
+                        t->push_back(txn);
                         origin->push_back(it->second);
                     }
                 }  // next i
+
+#ifndef UNORDERED_RECEIVE
+                if(myNodeType == DB_NODE &&
+                   this_node_type == PREPROCESSOR_NODE){
+                    PreprocessorNode* node =
+                        reinterpret_cast<PreprocessorNode*>(
+                                _config.allnodes.find(it->first)->second);
+                    _txn_bufs[node->partitionID].push(t);
+                }
+#endif
             }  // if(FD_ISSET(it->second, &readset))
         }  // next it
 
-        if(myNodeType == DB_NODE && actions){
-            vector<int> erasing;
-            for(set<int>::const_iterator it = _client_fds.begin();
-                    it != _client_fds.end() && actions; ++it){
-                if(FD_ISSET(*it, &readset)){
-                    --actions;
+        if(erasing.size() > 0){
+            _fd_set_valid = false;
+            for(vector<int>::const_iterator it = erasing.begin();
+                it != erasing.end(); ++it)
+                Disconnected(*it);
+        }
 
-                    int64_t n;
-                    int c, r = 0;
-                    while(r < sizeof(n) && (c = read(*it, &n, sizeof(n) - r))
-                            > 0)
-                        r += c;
-                    if(r < sizeof(n)){
-                        printf("Not receiving enough bytes from fd %d (%d, %d)\n",
-                               *it, r, c);
-                        erasing.push_back(*it);
-                        continue;
-                    }
-                    for(int64_t i = 0; i < n; ++i){
-                        if(ReadTxn(*it, &txn)){
-                            printf("Not receiving full txn from fd %d\n",
-                                   *it);
-                            erasing.push_back(*it);
-                            break;
-                        }
-                        REDUCE_NETWORK_TRAFFIC{
-                            txns->push_back(txn);
-                            origin->push_back(*it);
-                        }
-                    }  // next i
+#ifndef UNORDERED_RECEIVE
+        if(myNodeType == DB_NODE){
+            bool received_from_all = true;
+            for(map<int, queue<CircularBuffer<GenericTxn>*> >::const_iterator
+                it = _txn_bufs.begin(); it != _txn_bufs.end(); ++it)
+                if(it->second.empty()){
+                    received_from_all = false;
+                    break;
                 }
-            }
-
-            if(erasing.size() > 0){
-                _fd_set_valid = false;
-                for(vector<int>::const_iterator it = erasing.begin();
-                        it != erasing.end(); ++it){
-                    close(*it);
-                    _client_fds.erase(*it);
+            if(received_from_all)
+                for(map<int, queue<CircularBuffer<GenericTxn>*> >::iterator
+                    it = _txn_bufs.begin(); it != _txn_bufs.end(); ++it){
+                    CircularBuffer<GenericTxn>* ready_txns = it->second.front();
+                    for(CircularBuffer<GenericTxn>::iterator
+                        jt = ready_txns->begin(); jt != ready_txns->end(); ++jt)
+                        txns->push_back(*jt);
+                    it->second.pop();
+                    delete ready_txns;
                 }
-            }
-        } // myNodeType == DB_NODE
+        }
+#endif
     }
 }
 

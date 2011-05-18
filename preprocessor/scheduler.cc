@@ -75,7 +75,7 @@ Scheduler* Scheduler::GetInstance(const Configuration& config){
 }
 
 Scheduler::Scheduler(const Configuration& config)
-    : _config(config), _latest_masked_time(0){
+    : _config(config), _logic_clock(0), _latest_masked_time(-1){
     // Count the bits to prepare the bit masks
     uint64_t t;
     int txn_bits = 1;
@@ -101,10 +101,11 @@ Scheduler::Scheduler(const Configuration& config)
         reinterpret_cast<const PreprocessorNode*>(
             _config.allnodes.find(_config.myNodeID)->second);
 
-    _sn_time_mask = ~((1ULL << (txn_bits + instance_bits + partition_bits)) - 1);
+    _sn_time_shift = txn_bits + instance_bits + partition_bits;
+    _sn_time_mask = ~((1ULL << _sn_time_shift) - 1);
     _sn_instance_val =
-        ((node->partitionID << instance_bits) |
-         _config.instance_number) << txn_bits;
+        ((static_cast<unsigned int>(node->partitionID) << instance_bits) |
+         static_cast<unsigned int>(_config.instance_number)) << txn_bits;
     _sn_serial_mask = (1ULL << txn_bits) - 1;
 }
 
@@ -193,14 +194,14 @@ double Scheduler::ExpectedDuration(
 }
 
 int64_t Scheduler::GetSerialNumber(int to_use){
-    int64_t t = time(NULL);
-    int64_t masked_time = (t << 32) & _sn_time_mask;
-    int64_t sn = (masked_time == _latest_masked_time) ?
+    uint64_t t = Tick();
+    uint64_t masked_time = (t << _sn_time_shift) & _sn_time_mask;
+    uint64_t sn = (masked_time == _latest_masked_time) ?
         _latest_sn :
         masked_time | _sn_instance_val;
     _latest_masked_time = masked_time;
     _latest_sn = sn + to_use;
-    return sn;
+    return static_cast<int64_t>(sn);
 }
 
 RandomizedScheduler::RandomizedScheduler(const Configuration& config)
