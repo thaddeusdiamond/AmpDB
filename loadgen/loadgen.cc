@@ -13,7 +13,7 @@
 #include "loadgen.h"
 
 int Transaction;
-int NumWarehouses;
+int NumWarehouses = MAXW;
 
 GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
     int ol_cnt, wsize, rsize, asize;                    // Orderline count
@@ -148,11 +148,10 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
     return t;
 }
 
-GenericTxn *generate(int id, int w_ids) {
+GenericTxn *generate(int id) {
     double x = RANF();                                  // Pick random #
     
     Transaction = id;
-    NumWarehouses = w_ids;
     /*          PROBABILISTIC CHOICE OF TRANSACTION PARAMS      */
     if (x < NO_PER * NO_INV * NO_MP)                    // Invalid, mp N-O
         return generate_txn(false, true, false, NO_ID);

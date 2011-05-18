@@ -425,10 +425,12 @@ int main(int argc, char **argv) {
                 t->run2();
         }
         
-        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY
-        t = generate(j++, 10);
+        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
+
+        t = generate(j++);
         incomingtxns.enqueue(*t);
-        log << "SENDING TXN: " << (j - 1) << endl; */
+        log << "SENDING TXN: " << (j - 1) << endl;
+
         while(incomingtxns.size()) {
             processNewTxn(incomingtxns.dequeue());
         }

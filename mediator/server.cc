@@ -116,7 +116,7 @@ int MediatorServer::StartServer(){
                 generated += need;
                 origin.resize(need, -1);
                 for(int i = 0; i < need; ++i){
-                    GenericTxn* txn = generate(0, NUM_WAREHOUSE);
+                    GenericTxn* txn = generate(0);
                     txns.push_back(*txn);
                     delete txn;
                 }

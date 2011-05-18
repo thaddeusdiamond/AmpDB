@@ -32,7 +32,7 @@
 
 /* <---------------------- BEGIN FUNC DECS -----------------------> */
 
-GenericTxn *generate(int id, int w_ids);
+GenericTxn *generate(int id);
 GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type);
 
 /* <----------------------- END FUNC DECS ------------------------> */
