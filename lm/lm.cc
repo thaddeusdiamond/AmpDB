@@ -409,15 +409,20 @@ int main(int argc, char **argv) {
     
     while(true) {
 
-//        if(DEBUG) {
-//            // input collection from stdin
+        // input
 
-//        } else {
-            // non-blocking input collection
-            connection->FillIncomingMessages(&incomingmsgs);
-            connection->FillIncomingTxns(&incomingtxns);
-            fillIncomingDBTxns();
-//        }
+        if(txns.size() < 10) {
+            t = generate(j++);
+            incomingtxns.enqueue(*t);
+            cerr << "SENDING TXN: " << (j - 1) << endl;
+        }
+
+        if(!incomingmsgs.size()) connection->FillIncomingMessages(&incomingmsgs);
+        if(!incomingtxns.size()) connection->FillIncomingTxns(&incomingtxns);
+        fillIncomingDBTxns();
+
+
+        // processing
 
         while(incomingmsgs.size()) {
             Txn *t = processNewMsg(incomingmsgs.dequeue());
@@ -425,12 +430,6 @@ int main(int argc, char **argv) {
                 t->run2();
         }
         
-        /* THE FOLLOWING CODE IS MEANT TO TEST DIRECTLY */
-
-        t = generate(j++);
-        incomingtxns.enqueue(*t);
-        log << "SENDING TXN: " << (j - 1) << endl;
-
         while(incomingtxns.size()) {
             processNewTxn(incomingtxns.dequeue());
         }
@@ -438,7 +437,7 @@ int main(int argc, char **argv) {
         while(incomingdbtxns.size()) {
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
             Txn *t = txns[dbtxn[0]];                // Txn id
-            log << "RECEIVED FINISHED TXN: " << dbtxn[0] << endl;
+            cerr << "RECEIVED FINISHED TXN: " << dbtxn[0] << endl;
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
         }

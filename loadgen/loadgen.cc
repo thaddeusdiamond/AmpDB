@@ -149,14 +149,18 @@ GenericTxn *generate_txn(bool valid, bool mp, bool last, Key type) {
 }
 
 GenericTxn *generate(int id) {
-    double x = RANF();                                  // Pick random #
     
     Transaction = id;
+    return generate_txn(true, false, false, NO_ID); // Valid, sp N-O
+    
     /*          PROBABILISTIC CHOICE OF TRANSACTION PARAMS      */
+    
+    double x = RANF();                                  // Pick random #
+    
     if (x < NO_PER * NO_INV * NO_MP)                    // Invalid, mp N-O
         return generate_txn(false, true, false, NO_ID);
  
-   else if (x < NO_PER * NO_INV)                        // Invalid, sp N-O
+    else if (x < NO_PER * NO_INV)                        // Invalid, sp N-O
         return generate_txn(false, false, false, NO_ID);
     
     else if (x < NO_PER * (NO_INV + (1 - NO_INV) * NO_MP))
