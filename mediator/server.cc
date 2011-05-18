@@ -208,7 +208,8 @@ int MediatorServer::ProcessTxn(const GenericTxn& txn){
     txn.serialize_to(buf + sizeof(int64_t), &length);
     length += sizeof(int64_t);
 
-    if(txn.isolationlevel == READ_UNCOMMITTED){
+    if(_config.execution_mode == Configuration::MODE_TRADITIONAL ||
+       txn.isolationlevel == READ_UNCOMMITTED){
         // pure reading txn, no order needed
         set<int> slices;
         for(int i = 0; i < txn.rsetsize; ++i){

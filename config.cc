@@ -15,11 +15,11 @@
 using std::string;
 
 Configuration::Configuration(int node_id)
-    : myNodeID(node_id), wait_time(1000){
+    : myNodeID(node_id), wait_time(1000), execution_mode(MODE_DETERMINISTIC){
 }
 
 Configuration::Configuration(int node_id, const string& filename)
-    : myNodeID(node_id), wait_time(1000){
+    : myNodeID(node_id), wait_time(1000), execution_mode(MODE_DETERMINISTIC){
     if(ReadFromFile(filename))
         exit(0);
 }
@@ -53,6 +53,13 @@ int Configuration::ReadFromFile(const string& filename){
 void Configuration::ProcessConfigLine(char key[], char value[]){
     if(strcmp(key, "wait_time") == 0){
         wait_time = atoll(value);
+    }else if(strcmp(key, "mode") == 0){
+        if(strcmp(value, "deterministic") == 0)
+            execution_mode = MODE_DETERMINISTIC;
+        else if(strcmp(value, "traditional") == 0)
+            execution_mode = MODE_TRADITIONAL;
+        else
+            printf("Unknown execution mode: %s\n", value);
     }else if(strncmp(key, "node", 4) != 0){
 #if VERBOSE
         printf("Unknown key in config file: %s\n", key);

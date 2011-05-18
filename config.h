@@ -59,6 +59,11 @@ class Configuration{
 
     map<string, string> other_opt;
 
+    enum ExecutionMode{
+        MODE_DETERMINISTIC,
+        MODE_TRADITIONAL,
+    }execution_mode;
+
     virtual ~Configuration(){}
 
   protected:
