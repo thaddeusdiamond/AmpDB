@@ -1,0 +1,4 @@
+#!/bin/sh
+mkfifo ~/db/buffer$2.lm.db || true
+~/db/lm/lm $1 $2 < ~/db/buffer$2.lm.db | ~/db/db2/db $2 > ~/db/buffer$2.lm.db
+
