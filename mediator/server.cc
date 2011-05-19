@@ -28,6 +28,7 @@
 #include "../remote.h"
 #include "../message.h"
 #include "../circularbuffer.h"
+#include "../db2/lg.h"
 
 #define DEQUE CircularBuffer
 
@@ -36,7 +37,7 @@
 
 // #define EXTRA_TXN 1  // generate EXTRA_TXN extra txns for each one from clients
 #if EXTRA_TXN || GENERATE_TXN
-#include "../loadgen/loadgen.h"
+//#include "../loadgen/loadgen.h"
 #define NUM_WAREHOUSE 10
 #endif
 
@@ -116,7 +117,7 @@ int MediatorServer::StartServer(){
                 generated += need;
                 origin.resize(need, -1);
                 for(int i = 0; i < need; ++i){
-                    GenericTxn* txn = generate(0);
+                    GenericTxn* txn = generate2(_config.dbpartitions.size());
                     txns.push_back(*txn);
                     delete txn;
                 }
@@ -208,7 +209,7 @@ int MediatorServer::ProcessTxn(const GenericTxn& txn){
     txn.serialize_to(buf + sizeof(int64_t), &length);
     length += sizeof(int64_t);
 
-    if(_config.execution_mode == Configuration::MODE_TRADITIONAL ||
+    if(_config.execution_mode == MODE_TRADITIONAL ||
        txn.isolationlevel == READ_UNCOMMITTED){
         // pure reading txn, no order needed
         set<int> slices;

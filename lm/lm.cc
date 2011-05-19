@@ -146,9 +146,9 @@ public:
         cout << 0 << endl; // neworder type
         cout << txnid << endl; 
         for(int i = 0; i < 10; i++) {
-            cout << 0 << " ";           // part
-            cout << args[i] << " ";     // item id
-            cout << args[10+i] << " ";  // quantity
+            cout << part(args[i])   << " ";  // part
+            cout << record(args[i]) << " ";  // item id
+            cout << args[10+i]      << " ";  // quantity
         }
         cout << endl;
 
@@ -310,8 +310,6 @@ void processNewTxn(GenericTxn gt) {
     txns[t->txnid] = t;
 
     t->starttime = tim();
-
-    if(t->txnid == 50000) cerr << "-----\n";
     
     // request locks
     KEY r;
@@ -348,12 +346,7 @@ Txn *processNewMsg(Message m) {
 // (this function's calling signature may have to change)
 int stall = 1;
 void processCompletedTxn(Txn *t) {
-    
-//    if(t->txnid == 50000 && stall) {
-//        stall = 0;
-//        return;
-//    }
-    
+
     // txn is done; release locks, clean up, and (TODO) send ack to client
     KEY r;
     
@@ -495,11 +488,12 @@ int main(int argc, char **argv) {
 
         // input
 
-        if(txns.size() < 100) {
-            t = generate2(j++);
-            incomingtxns.enqueue(*t);
-            if(DEBUG) cerr << "SENDING TXN: " << (j - 1) << endl << flush;
-        }
+//        if(txns.size() < 100) {
+//            t = generate2(1);
+//            t->txnid = j++;
+//            incomingtxns.enqueue(*t);
+//            if(DEBUG) cerr << "SENDING TXN: " << (j-1) << endl << flush;
+//        }
 
         if(!incomingmsgs.size()) connection->FillIncomingMessages(&incomingmsgs);
         if(!incomingtxns.size()) connection->FillIncomingTxns(&incomingtxns);
@@ -520,10 +514,12 @@ int main(int argc, char **argv) {
         
         while(incomingdbtxns.size()) {
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
-            Txn *t = txns[dbtxn[0]];                // Txn id
-            if(DEBUG) cerr << "RECEIVED FINISHED TXN: " << dbtxn[0] << endl;
-            t->reads[0] = dbtxn[1];                 // Populate reads
-            processCompletedTxn(t);                 // Process completed db txn
+            if(txns.count(dbtxn[0])) {
+                Txn *t = txns[dbtxn[0]];                // Txn id
+                if(DEBUG) cerr << "RECEIVED FINISHED TXN: " << dbtxn[0] << endl;
+                t->reads[0] = dbtxn[1];                 // Populate reads
+                processCompletedTxn(t);                 // Process completed db txn
+            }
         }
 
     }

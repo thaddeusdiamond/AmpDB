@@ -1,0 +1,1 @@
+g++ -o lgtest lgtest.cc; ./lgtest
