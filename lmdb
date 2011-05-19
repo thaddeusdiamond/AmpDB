@@ -1,4 +1,8 @@
 #!/bin/sh
-mkfifo ~/db/buffer$2.lm.db || true
-~/db/lm/lm $1 $2 < ~/db/buffer$2.lm.db | ~/db/db2/db $2 > ~/db/buffer$2.lm.db
+DIR=~/db
 
+mkfifo $DIR/buffer$2.lm.db > /dev/null 2>&1 || true
+mkfifo $DIR/buffer$2.db.lm > /dev/null 2>&1 || true
+
+$DIR/lm/lm $1 $2 < $DIR/buffer$2.lm.db > $DIR/buffer$2.db.lm &
+$DIR/db2/db $2 > $DIR/buffer$2.lm.db < $DIR/buffer$2.db.lm

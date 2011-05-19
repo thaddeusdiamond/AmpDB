@@ -87,8 +87,8 @@ int main(int argc, char* argv[]){
             break;
     }
 
-    if(argc < argBegin + 4){
-        printf("Usage: %s [-v|-q] config-file db-exec preproc-exec mediator-exec [client-exec]\n",
+    if(argc < argBegin + 5){
+        printf("Usage: %s [-v|-q] config-file db-exec {db-killer|''} preproc-exec mediator-exec [client-exec]\n",
                argv[0]);
         return -1;
     }
@@ -175,9 +175,13 @@ bool CheckExecutable(char* exec){
 
 bool CheckExecutables(char* argv[], const ClusterConfiguration& config){
     if(CheckExecutable(argv[argBegin + 1])) return true;
-    if(CheckExecutable(argv[argBegin + 2])) return true;
+    if(argv[argBegin + 2][0] && CheckExecutable(argv[argBegin + 1])){
+        printf("db-killer invalid, use default killer\n");
+        argv[argBegin + 2][0] = '\0';
+    }
     if(CheckExecutable(argv[argBegin + 3])) return true;
-    if(config.HasClient() && CheckExecutable(argv[argBegin + 4])) return true;
+    if(CheckExecutable(argv[argBegin + 4])) return true;
+    if(config.HasClient() && CheckExecutable(argv[argBegin + 5])) return true;
     return false;
 }
 
@@ -317,9 +321,9 @@ void DeployOne(int nodeID, const Node* node, char* argv[]){
     const char* exec = 0;
     switch(static_cast<int>(node->nodeType)){
         case DB_NODE:           exec = argv[argBegin + 1]; break;
-        case PREPROCESSOR_NODE: exec = argv[argBegin + 2]; break;
-        case MEDIATOR_NODE:     exec = argv[argBegin + 3]; break;
-        case CLIENT_NODE:       exec = argv[argBegin + 4]; break;
+        case PREPROCESSOR_NODE: exec = argv[argBegin + 3]; break;
+        case MEDIATOR_NODE:     exec = argv[argBegin + 4]; break;
+        case CLIENT_NODE:       exec = argv[argBegin + 5]; break;
         default: exec = ""; break;
     }
     char strOpt3[1024];
@@ -378,22 +382,34 @@ void Kill(const ClusterConfiguration& config, char* argv[], bool client_int){
         if(client_int && static_cast<int>(node->nodeType) != CLIENT_NODE)
             continue;
 
+        char killer[1024] = "";
         switch(static_cast<int>(node->nodeType)){
-            case DB_NODE:           snprintf(exec, sizeof(exec),"%s/%s",
-                                             Cwd, argv[argBegin + 1]); break;
+            case DB_NODE:
+                if(argv[argBegin + 2][0])
+                    snprintf(killer, sizeof(killer), "%s/%s %d",
+                             Cwd, argv[argBegin + 2], it->first);
+                else
+                    snprintf(exec, sizeof(exec),"%s/%s",
+                             Cwd, argv[argBegin + 1]);
+                break;
             case PREPROCESSOR_NODE: snprintf(exec, sizeof(exec),"%s/%s",
-                                             Cwd, argv[argBegin + 2]); break;
-            case MEDIATOR_NODE:     snprintf(exec, sizeof(exec),"%s/%s",
                                              Cwd, argv[argBegin + 3]); break;
-            case CLIENT_NODE:       snprintf(exec, sizeof(exec),"%s/%s",
+            case MEDIATOR_NODE:     snprintf(exec, sizeof(exec),"%s/%s",
                                              Cwd, argv[argBegin + 4]); break;
+            case CLIENT_NODE:       snprintf(exec, sizeof(exec),"%s/%s",
+                                             Cwd, argv[argBegin + 5]); break;
             default: exec[0] = 0; break;
         }
-        if(exec[0]){
+        if(exec[0] || killer[0]){
             int pid = fork();
             if(pid == 0){
-                execlp("ssh", "ssh", node->host.c_str(),
-                       "killall", sigArg, exec, NULL);
+                if(killer[0]){
+                    execlp("ssh", "ssh", node->host.c_str(),
+                           killer, NULL);
+                }else{
+                    execlp("ssh", "ssh", node->host.c_str(),
+                           "killall", sigArg, exec, NULL);
+                }
                 exit(-1);
             }
         }

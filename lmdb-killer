@@ -1,0 +1,8 @@
+#!/bin/sh
+DIR=~/db
+
+killall $DIR/lm/lm
+killall $DIR/db2/db
+
+rm -f $DIR/buffer$1.lm.db
+rm -f $DIR/buffer$1.db.lm
