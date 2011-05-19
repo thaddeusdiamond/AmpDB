@@ -5,13 +5,15 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <map>
+#include <sys/time.h>
 #include "../circularbuffer.h"
-#include "../loadgen/loadgen.h"
 #include "../global.h"
 #include "../remote.h"
 #include "../generictxn.h"
 #include "../message.h"
 #include "../nonblock.h"
+#include "../db2/lg.h"
+//#include "../loadgen/loadgen.h"
 
 using namespace std;
 #define DEQUE CircularBuffer
@@ -20,6 +22,7 @@ using namespace std;
 
 #define DEBUG 0
 #define NPARTS 64
+#define DETERM 1
 
 class Txn;
 class Lock;
@@ -37,8 +40,9 @@ DEQUE< map<KEY, VAL> > incomingdbtxns;
 
 Configuration *config;
 RemoteConnection *connection;
+int txncount;
 
-ofstream log;
+double tim() { struct timeval tv; gettimeofday(&tv, NULL); return tv.tv_sec + tv.tv_usec/1e6; }
 
 void ginits(int node_id, char *config_file) {
     setlinebuf(stdout);
@@ -47,11 +51,12 @@ void ginits(int node_id, char *config_file) {
     config = new Configuration(node_id, config_file);
     connection = RemoteConnection::GetInstance(*config);
     srand(0);
+    txncount = 0;
 }
 
 
 ///////////// KEY /////////////
-    
+
 int16_t part(KEY k) {
     return (int16_t)(k >> 48);
 }
@@ -136,6 +141,18 @@ public:
     // is ready to be sent to the storage layer for execution. run sends a command
     // to the storage layer starting the appropriate stored procedure running with the args supplied
     void run() {
+        cout << 0 << endl; // neworder type
+        cout << txnid << endl; 
+        for(int i = 0; i < 10; i++) {
+            cout << 0 << " ";           // part
+            cout << args[i] << " ";     // item id
+            cout << args[10+i] << " ";  // quantity
+        }
+        cout << endl;
+
+        return;
+        
+        // thad's code:
         switch(txntype) {
             case NO_ID:
                 if (mp)
@@ -170,6 +187,10 @@ public:
     // this function is called (for multipartition txns only) after
     // all messages have been received
     void run2() {
+        
+        return;
+        
+        // thad's code:
         switch(txntype) {
             case NO_ID:
                 if (mp && reads[0]) {                   // Successful reads (mp)
@@ -213,8 +234,9 @@ public:
     int lockwaits;          // number of lock acquisitions on which txn is currently blocked
     int messagewaits;       // number of messages still waiting to be received before txn can complete
     bool readphasedone;     // set to true after read phase is complete for multipartition txns
-    map<KEY,VAL> reads; // local copy of data state; initially empty
-
+    map<KEY,VAL> reads;     // local copy of data state; initially empty
+    
+    double starttime;
 };
 
 
@@ -237,9 +259,32 @@ public:
     }
     
     void unlock(Txn *t) {
-        assert(owner == t);
-        if(requests.size()) {
-            owner = requests.dequeue();
+
+        if(owner != t) {
+            for(int i = 0; i < requests.size(); i++) {
+                if(requests.at(i) == t) {
+                    requests.erase(i);
+                    i = 0;
+                }
+            }
+            return;
+        }
+
+        if(int s = requests.size()) {
+            if(DETERM) {
+                owner = requests.dequeue();
+            } else {
+                for(int i = 0; i < s; i++) {
+                    if(requests.at(i)->lockwaits == 1) {
+                        owner = requests.at(i);
+                        requests.erase(i);
+                        goto done;
+                    }
+                }
+                owner = requests.dequeue();
+                done:
+                ;
+            }
             owner->lockwaits--;
             if(owner->lockwaits == 0)
                 owner->run();
@@ -261,6 +306,10 @@ void processNewTxn(GenericTxn gt) {
     Txn *t = new Txn(&gt);
     assert(txns.count(t->txnid) == 0);
     txns[t->txnid] = t;
+
+    t->starttime = tim();
+
+    if(t->txnid == 50000) cerr << "-----\n";
     
     // request locks
     KEY r;
@@ -272,18 +321,7 @@ void processNewTxn(GenericTxn gt) {
             locks[r]->lock(t);
         }
     }
-    
-//    // THIS IS AN AWFUL HACK (TODO: FIX IT)
-//    // since TPC-C (NO/Payment only) has no read-write conflicts, omit locking read items
-//    for(int j = 0; j < t->rsetsize; j++) {
-//        if(part((r = t->rset[j])) == PART) {
-//            if(!locks.count(r))
-//                locks[r] = new Lock();
-//            locks[r]->lock(t);
-//        }
-//    }
 
-        
     // start txn
     if(t->lockwaits == 0)
         t->run();
@@ -306,33 +344,34 @@ Txn *processNewMsg(Message m) {
 
 // process transaction result returned from the storage layer
 // (this function's calling signature may have to change)
+int stall = 1;
 void processCompletedTxn(Txn *t) {
-    if(!t->mp || t->readphasedone) {
-        // txn is done; release locks, clean up, and (TODO) send ack to client
-        KEY r;
-//        for(int j = 0; j < t->rsetsize; j++) {
-//            if(part((r = t->rset[j])) == PART) {
-//                locks[r]->unlock(t);
-//                if(locks[r]->owner == NULL) {
-//                    delete locks[r];
-//                    locks.erase(r);
-//                }
-//            }
-//        }
-        
-        for(int j = 0; j < t->wsetsize; j++) {
-            if(part((r = t->wset[j])) == PART) {
-                locks[r]->unlock(t);
-                if(locks[r]->owner == NULL) {
-                    delete locks[r];
-                    locks.erase(r);
-                }
+    
+//    if(t->txnid == 50000 && stall) {
+//        stall = 0;
+//        return;
+//    }
+    
+    // txn is done; release locks, clean up, and (TODO) send ack to client
+    KEY r;
+    
+    for(int j = 0; j < t->wsetsize; j++) {
+        if(part((r = t->wset[j])) == PART) {
+            locks[r]->unlock(t);
+            if(locks[r]->owner == NULL) {
+                delete locks[r];
+                locks.erase(r);
             }
         }
-        
-        txns.erase(t->txnid);
-        delete t;
+    }
+    
+    txns.erase(t->txnid);
+    delete t;
+    txncount++;
 
+    return;
+
+    if(!t->mp || t->readphasedone) {
     } else {
         // mp txn, just finished read phase
         t->readphasedone = true;
@@ -372,6 +411,22 @@ void processCompletedTxn(Txn *t) {
     }
 }
 
+void abortTxn(Txn *t) {
+    KEY r;
+    for(int j = 0; j < t->wsetsize; j++) {
+        if(part((r = t->wset[j])) == PART) {
+            locks[r]->unlock(t);
+            if(locks[r]->owner == NULL) {
+                delete locks[r];
+                locks.erase(r);
+            }
+        }
+    }
+    
+    txns.erase(t->txnid);
+    delete t;
+}
+
 void fillIncomingDBTxns() {
     map<KEY, VAL> newtxn;                           // Generic new txn
     KEY i, read_in;
@@ -399,7 +454,7 @@ void fillIncomingDBTxns() {
 }
 
 int main(int argc, char **argv) {
-    log.open("lm.out");
+
     ginits(atoi(argv[2]), argv[1]);
 
     PART = atoi(argv[1]);
@@ -407,14 +462,41 @@ int main(int argc, char **argv) {
     int j = 1;
     GenericTxn *t = NULL;
     
+    int x = 0;
+    double tick = tim() + 0.01;
+    
     while(true) {
+
+        // reporting
+        
+//        if(tim() > tick) {
+//            if(x++ > 300) return 0;
+//            if(x == 200) processCompletedTxn(txns[50000]);
+//            tick += 0.01;
+//            cerr << x << " " << txncount << endl;
+//            txncount = 0;
+//        }
+
+        // timeouts
+        
+        if(!DETERM) {
+            for(map<int,Txn *>::iterator it = txns.begin(); it != txns.end(); ++it) {
+                if(tim() - it->second->starttime > 0.1) {
+                    //if(it->second->txnid != 50000 && it->second->lockwaits) {
+                    if(it->second->lockwaits) {
+                        abortTxn(it->second);
+                        it = txns.begin();
+                    }
+                } else break;
+            } 
+        }
 
         // input
 
-        if(txns.size() < 10) {
-            t = generate(j++);
+        if(txns.size() < 100) {
+            t = generate2(j++);
             incomingtxns.enqueue(*t);
-            cerr << "SENDING TXN: " << (j - 1) << endl;
+            if(DEBUG) cerr << "SENDING TXN: " << (j - 1) << endl << flush;
         }
 
         if(!incomingmsgs.size()) connection->FillIncomingMessages(&incomingmsgs);
@@ -437,13 +519,12 @@ int main(int argc, char **argv) {
         while(incomingdbtxns.size()) {
             map<KEY, VAL> dbtxn = incomingdbtxns.dequeue();
             Txn *t = txns[dbtxn[0]];                // Txn id
-            cerr << "RECEIVED FINISHED TXN: " << dbtxn[0] << endl;
+            if(DEBUG) cerr << "RECEIVED FINISHED TXN: " << dbtxn[0] << endl;
             t->reads[0] = dbtxn[1];                 // Populate reads
             processCompletedTxn(t);                 // Process completed db txn
         }
 
     }
-    log.close();
     
     return 0;
 }

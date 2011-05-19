@@ -6,6 +6,7 @@ OBJS=$(SRCS:.cc=.o)
 
 all: $(OBJS)
 	$(MAKE) -C db
+	$(MAKE) -C db2
 	$(MAKE) -C mediator
 	$(MAKE) -C loadgen
 	$(MAKE) -C lm
@@ -18,6 +19,7 @@ all: $(OBJS)
 clean:
 	rm -f $(OBJS)
 	$(MAKE) -C db clean
+	$(MAKE) -C db2 clean
 	$(MAKE) -C mediator clean
 	$(MAKE) -C loadgen clean
 	$(MAKE) -C lm clean

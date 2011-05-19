@@ -1,7 +1,7 @@
-#include "global.h"
 #include <stdlib.h>
 #include <sys/time.h>
 #include <math.h>
+#include "global.h"
 
 double tim() { struct timeval tv; gettimeofday(&tv, NULL); return tv.tv_sec + tv.tv_usec/1e6; }
 void spin(double dur) {
