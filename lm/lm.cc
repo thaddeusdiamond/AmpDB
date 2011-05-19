@@ -22,7 +22,6 @@ using namespace std;
 
 #define DEBUG 0
 #define NPARTS 64
-#define DETERM 1
 
 class Txn;
 class Lock;
@@ -42,6 +41,8 @@ Configuration *config;
 RemoteConnection *connection;
 int txncount;
 
+bool DETERM;
+
 double tim() { struct timeval tv; gettimeofday(&tv, NULL); return tv.tv_sec + tv.tv_usec/1e6; }
 
 void ginits(int node_id, char *config_file) {
@@ -49,6 +50,7 @@ void ginits(int node_id, char *config_file) {
     setlinebuf(stderr);
     std::ios::sync_with_stdio();
     config = new Configuration(node_id, config_file);
+    DETERM = config->execution_mode == MODE_DETERMINISTIC;
     connection = RemoteConnection::GetInstance(*config);
     srand(0);
     txncount = 0;

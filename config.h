@@ -13,6 +13,11 @@ using std::map;
 using std::string;
 using std::vector;
 
+enum ExecutionMode{
+    MODE_DETERMINISTIC,
+    MODE_TRADITIONAL,
+};
+
 enum NodeType{
     DB_NODE, PREPROCESSOR_NODE, MEDIATOR_NODE,
 };
@@ -61,10 +66,7 @@ class Configuration{
 
     map<string, string> other_opt;
 
-    enum ExecutionMode{
-        MODE_DETERMINISTIC,
-        MODE_TRADITIONAL,
-    }execution_mode;
+    ExecutionMode execution_mode;
 
     virtual ~Configuration(){}
 
