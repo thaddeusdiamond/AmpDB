@@ -304,6 +304,9 @@ bool WriteConfig(char filename[], const ClusterConfiguration& config){
             fprintf(fp, "binlog=%s/%s\n", Cwd, it->second.c_str());
     if(config.other_opt.find("binlog") == config.other_opt.end())
         fprintf(fp, "binlog=%s/binlog\n", Cwd);
+    fprintf(fp, "mode=%s\n",
+            config.execution_mode == MODE_DETERMINISTIC ?
+            "deterministic" : "traditional");
     fclose(fp);
     return false;
 }
